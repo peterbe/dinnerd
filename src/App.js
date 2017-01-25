@@ -3,12 +3,17 @@ import logo from './logo.svg'
 import './App.css'
 import dateFns from 'date-fns'
 import Highlighter from 'react-highlight-words'
+import lf from 'lovefield'
 import getSchema from './Schema'
 import JsSearch from 'js-search'
 
 
 const DATE_FORMAT = 'YYYY-MM-DD'
 
+
+const makeWeekId = (datetime) => {
+  return 'week-head-' + dateFns.format(datetime, 'YYYYW')
+}
 
 class App extends Component {
   constructor() {
@@ -18,6 +23,8 @@ class App extends Component {
     }
     this.updateDay = this.updateDay.bind(this)
     this.searcher = this.searcher.bind(this)
+    this.loadPreviousWeek = this.loadPreviousWeek.bind(this)
+    this.loadNextWeek = this.loadNextWeek.bind(this)
   }
 
   componentWillMount() {
@@ -25,19 +32,21 @@ class App extends Component {
   }
 
   componentDidMount() {
-    const weekStartsOnAMonday = JSON.parse(
+    this.weekStartsOnAMonday = JSON.parse(
       localStorage.getItem('weekStartsOnAMonday') || 'false'
     )
     const firstDateThisWeek = dateFns.startOfWeek(
-      new Date(), {weekStartsOn: weekStartsOnAMonday ? 1 : 0}
+      new Date(), {weekStartsOn: this.weekStartsOnAMonday ? 1 : 0}
     )
 
     this.createDBConnection().then(() => {
+
+      this.searchIndex = new JsSearch.Search('days')
+      this.searchIndex.addIndex('text')
+      this.searchIndex.addIndex('notes')
+      this.searchIndex.addIndex('date')
+
       this.loadWeek(firstDateThisWeek).then(() => {
-        console.log('First week loaded');
-        this.buildSearchIndex().then(() => {
-          console.log('Search Index loaded');
-        })
       })
     })
 
@@ -50,22 +59,33 @@ class App extends Component {
   }
 
   loadWeek(firstDate) {
+    let lastDate = dateFns.addDays(firstDate, 7)
     const daysTable = this.db.getSchema().table('Days');
-    return this.db.select().from(daysTable).exec().then(results => {
-      // console.log("RESULTS!", results);
+    return this.db.select().from(daysTable)
+    .where(
+      lf.op.and(
+        daysTable.datetime.gte(firstDate),
+        daysTable.datetime.lt(lastDate)
+      )
+    )
+    .exec().then(results => {
       let daysMap = {}
       results.forEach(day => {
         daysMap[day.date] = day
       })
       let days = this.state.days
-      // initiate 7 empty days for this week
-
       let dayNumbers = [0, 1, 3, 4, 5, 6]
       dayNumbers.forEach(d => {
         let datetime = dateFns.addDays(firstDate, d)
         let date = dateFns.format(datetime, DATE_FORMAT)
+        let indexDocuments = []
         if (daysMap[date]) {
           days.push(daysMap[date])
+          indexDocuments.push({
+            date: daysMap[date].date,
+            text: daysMap[date].text,
+            notes: daysMap[date].notes,
+          })
         } else {
           days.push({
             date: date,
@@ -75,35 +95,36 @@ class App extends Component {
             starred: false,
           })
         }
+        if (indexDocuments.length) {
+          this.searchIndex.addDocuments(indexDocuments)
+        }
       })
+      // days.sort((a, b) => a.datetime.getTime() - b.datetime.getTime())
+      days.sort((a, b) => a.datetime - b.datetime)
       this.setState({days: days})
     })
   }
 
-  buildSearchIndex() {
-
-    this.searchIndex = new JsSearch.Search('days')
-    this.searchIndex.addIndex('text')
-    this.searchIndex.addIndex('notes')
-    this.searchIndex.addIndex('date')
-
-    const daysTable = this.db.getSchema().table('Days');
-    return this.db.select().from(daysTable).exec().then(results => {
-      let documents = []
-      results.forEach(result => {
-        documents.push({
-          date: result.date,
-          text: result.text,
-          notes: result.notes,
-        })
-      })
-      this.searchIndex.addDocuments(documents)
-
-    })
-  }
+  // buildSearchIndex() {
+  //
+  //
+  //
+  //   const daysTable = this.db.getSchema().table('Days');
+  //   return this.db.select().from(daysTable).exec().then(results => {
+  //     let documents = []
+  //     results.forEach(result => {
+  //       documents.push({
+  //         date: result.date,
+  //         text: result.text,
+  //         notes: result.notes,
+  //       })
+  //     })
+  //     this.searchIndex.addDocuments(documents)
+  //
+  //   })
+  // }
 
   updateDay(day, data) {
-    console.log("SAVE!", "DAY", day, "DATA", data);
     const daysTable = this.db.getSchema().table('Days')
     let row = daysTable.createRow({
       date: day.date,
@@ -114,7 +135,7 @@ class App extends Component {
     })
     return this.db.insertOrReplace().into(daysTable).values([row]).exec()
     .then(inserted => {
-      console.log('INSERTED', inserted);
+      // console.log('INSERTED', inserted);
       inserted.forEach(day => {
         this.searchIndex.addDocuments([{
           date: day.date,
@@ -133,29 +154,68 @@ class App extends Component {
     return this.searchIndex.search(text)
   }
 
+  loadPreviousWeek(event) {
+    const firstDatetime = this.state.days[0].datetime
+    const firstDatePreviousWeek = dateFns.subDays(firstDatetime, 7)
+    this.loadWeek(firstDatePreviousWeek).then(() => {
+      const element = document.querySelector(
+        '#' + makeWeekId(firstDatePreviousWeek)
+      )
+      if (element) {
+        element.scrollIntoView({block: 'start', behavior: 'smooth'})
+      }
+    })
+  }
+
+  loadNextWeek(event) {
+    const lastDatetime = this.state.days[this.state.days.length - 1].datetime
+    // console.log('lastDatetime', lastDatetime);
+    const firstDateNextWeek = dateFns.addDays(lastDatetime, 1)
+    this.loadWeek(firstDateNextWeek).then(() => {
+      const element = document.querySelector(
+        '#' + makeWeekId(firstDateNextWeek)
+      )
+      if (element) {
+        element.scrollIntoView({block: 'start', behavior: 'smooth'})
+      }
+    })
+  }
+
   render() {
+    const weekStartsOn = this.weekStartsOnAMonday ? 1 : 0
     return (
       <div className="App">
         <div className="App-header">
           <img src={logo} className="App-logo" alt="logo" />
           <h2>Dinnerd</h2>
         </div>
-
-        {
-          this.state.days.length ?
-          <ShowWeekHeader datetime={this.state.days[0].datetime}/>
-          : <i>thinking...</i>
-        }
+        <div className="options">
+          <button type="button"
+            onClick={this.loadPreviousWeek}>
+            Previous week
+          </button>
+        </div>
         {
           this.state.days.map(day => {
+            let firstDateThisWeek = dateFns.isEqual(
+              day.datetime,
+              dateFns.startOfWeek(day.datetime, {weekStartsOn: weekStartsOn})
+            )
             return <Day
               day={day}
               key={day.date}
               updateDay={this.updateDay}
               searcher={this.searcher}
+              firstDateThisWeek={firstDateThisWeek}
             />
           })
         }
+        <div className="options">
+          <button type="button"
+            onClick={this.loadNextWeek}>
+            Next week
+          </button>
+        </div>
       </div>
     );
   }
@@ -165,8 +225,9 @@ export default App
 
 const ShowWeekHeader = ({ datetime }) => {
   let lastDatetime = dateFns.addDays(datetime, 6)
+  const id = makeWeekId(datetime)
   return (
-    <h3 className="App-intro">
+    <h3 className="week-head" id={id}>
       { dateFns.format(datetime, 'Do MMMM') }
       {' '}
       ...
@@ -185,7 +246,7 @@ class Day extends Component {
       text: '',
       notes: '',
       starred: false,
-      searchResults: [],
+      searchResults: {},
     }
     this.saveChanges = this.saveChanges.bind(this)
     this.autoCompleteSearch = this.autoCompleteSearch.bind(this)
@@ -209,24 +270,22 @@ class Day extends Component {
       notes: this.state.notes,
       starred: this.state.starred,
     }).then(r => {
-      this.setState({saved: true})
+      this.setState({saved: true, searchResults: {}})
     })
-    // Immediately hide the autocomplete whilst waiting for the
-    // persistent save to finish.
-    this.setState({searchResults: []})
   }
 
   autoCompleteSearch(text, field) {
-    // console.log(this.props);
     const { searcher } = this.props
-    // console.log('SEARCHING FOR', text);
-    this.setState({searchResults: searcher(text, field)})
+    let searchResults = {}
+    searchResults[field] = searcher(text, field)
+    this.setState({searchResults: searchResults})
   }
 
   render() {
-    let { day } = this.props
+    let { day, firstDateThisWeek } = this.props
     return (
       <div className="day">
+        { firstDateThisWeek ? <ShowWeekHeader datetime={day.datetime}/> : null }
         <h3>{dateFns.format(day.datetime, 'dddd')}</h3>
         <div className="textareas">
           <div className="textarea">
@@ -241,9 +300,10 @@ class Day extends Component {
               value={this.state.text}></textarea>
             <ShowTextAutocomplete
               text={this.state.text}
-              results={this.state.searchResults}
+              field="text"
+              results={this.state.searchResults.text}
               picked={text => {
-                this.setState({text: text, saved: false, searchResults: []})
+                this.setState({text: text, saved: false, searchResults: {}})
               }}
             />
 
@@ -253,9 +313,19 @@ class Day extends Component {
               placeholder="Notes..."
               onBlur={this.saveChanges}
               onChange={e => {
-                this.setState({notes: e.target.value, saved: false})
+                this.setState({notes: e.target.value, saved: false}, () => {
+                  this.autoCompleteSearch(this.state.notes, 'notes')
+                })
               }}
               value={this.state.notes}></textarea>
+            <ShowTextAutocomplete
+              text={this.state.notes}
+              results={this.state.searchResults.notes}
+              field="notes"
+              picked={text => {
+                this.setState({notes: text, saved: false, searchResults: {}})
+              }}
+            />
           </div>
         </div>
         <div className="actions">
@@ -282,7 +352,9 @@ class Day extends Component {
 
 
 const ShowTextAutocomplete = ({ text, results, picked, field = 'text' }) => {
-
+  if (!results) {
+    return null
+  }
   if (!results.length) {
     return null
   }
@@ -293,7 +365,6 @@ const ShowTextAutocomplete = ({ text, results, picked, field = 'text' }) => {
     // return '\b' + word
     return word
   })
-  console.log("searchWords", searchWords);
   return (
     <div className="autocomplete">
       <ul>

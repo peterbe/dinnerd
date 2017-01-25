@@ -14,9 +14,9 @@
   color: white;
 }
 
-.App-intro {
+/*.App-intro {
   font-size: large;
-}
+}*/
 
 @keyframes App-logo-spin {
   from { transform: rotate(0deg); }
@@ -30,6 +30,12 @@
 .day .actions .action {
   width: 50%;
   padding: 10px;
+}
+
+.day .week-head {
+  border-top: 1px solid #efefef;
+  margin-top: 20px;
+  padding-top: 10px;
 }
 
 .day textarea {
