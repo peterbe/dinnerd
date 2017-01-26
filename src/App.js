@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import logo from './logo.svg'
 import './App.css'
 import dateFns from 'date-fns'
 import Highlighter from 'react-highlight-words'
@@ -13,6 +12,10 @@ const DATE_FORMAT = 'YYYY-MM-DD'
 
 const makeWeekId = (datetime) => {
   return 'week-head-' + dateFns.format(datetime, 'YYYYW')
+}
+
+const makeDayId = (datetime) => {
+  return 'day-' + dateFns.format(datetime, 'YYYYMMDD')
 }
 
 class App extends Component {
@@ -35,7 +38,7 @@ class App extends Component {
     this.weekStartsOnAMonday = JSON.parse(
       localStorage.getItem('weekStartsOnAMonday') || 'false'
     )
-    const firstDateThisWeek = dateFns.startOfWeek(
+    this.firstDateThisWeek = dateFns.startOfWeek(
       new Date(), {weekStartsOn: this.weekStartsOnAMonday ? 1 : 0}
     )
 
@@ -46,7 +49,7 @@ class App extends Component {
       this.searchIndex.addIndex('notes')
       this.searchIndex.addIndex('date')
 
-      this.loadWeek(firstDateThisWeek).then(() => {
+      this.loadWeek(this.firstDateThisWeek).then(() => {
       })
     })
 
@@ -104,25 +107,6 @@ class App extends Component {
       this.setState({days: days})
     })
   }
-
-  // buildSearchIndex() {
-  //
-  //
-  //
-  //   const daysTable = this.db.getSchema().table('Days');
-  //   return this.db.select().from(daysTable).exec().then(results => {
-  //     let documents = []
-  //     results.forEach(result => {
-  //       documents.push({
-  //         date: result.date,
-  //         text: result.text,
-  //         notes: result.notes,
-  //       })
-  //     })
-  //     this.searchIndex.addDocuments(documents)
-  //
-  //   })
-  // }
 
   updateDay(day, data) {
     const daysTable = this.db.getSchema().table('Days')
@@ -184,17 +168,25 @@ class App extends Component {
   render() {
     const weekStartsOn = this.weekStartsOnAMonday ? 1 : 0
     return (
-      <div className="App">
+      <div className="container">
+        <Nav firstDateThisWeek={this.firstDateThisWeek}/>
         <div className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <h2>Dinnerd</h2>
+          <h2>Hi! Waldo here!</h2>
         </div>
-        <div className="options">
-          <button type="button"
-            onClick={this.loadPreviousWeek}>
-            Previous week
-          </button>
-        </div>
+        {
+          this.state.days.length ?
+          <div className="options top">
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              onClick={this.loadPreviousWeek}>
+              Previous week
+            </button>
+          </div>
+          : null
+        }
+
+        { !this.state.days.length ? <i>Loadings...</i> : null }
         {
           this.state.days.map(day => {
             let firstDateThisWeek = dateFns.isEqual(
@@ -210,12 +202,27 @@ class App extends Component {
             />
           })
         }
-        <div className="options">
-          <button type="button"
-            onClick={this.loadNextWeek}>
-            Next week
-          </button>
-        </div>
+        {
+          this.state.days.length ?
+          <div className="options bottom">
+            <button
+              type="button"
+              className="btn btn-primary btn-block"
+              onClick={this.loadNextWeek}>
+              Next week
+            </button>
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={e => {
+                // might need to make sure all days are NOT in edit mode
+                window.print()
+              }}>
+              Print
+            </button>
+          </div>
+          : null
+        }
       </div>
     );
   }
@@ -223,26 +230,104 @@ class App extends Component {
 
 export default App
 
-const ShowWeekHeader = ({ datetime }) => {
-  let lastDatetime = dateFns.addDays(datetime, 6)
-  const id = makeWeekId(datetime)
-  return (
-    <h3 className="week-head" id={id}>
-      { dateFns.format(datetime, 'Do MMMM') }
-      {' '}
-      ...
-      {' '}
-      { dateFns.format(lastDatetime, 'Do MMMM') }
-    </h3>
-  )
-}
 
+class Nav extends Component {
+  constructor() {
+    super()
+    this.state = {
+      collapsed: true,
+      collapsing: false,
+    }
+    // this.saveChanges = this.saveChanges.bind(this)
+    // this.autoCompleteSearch = this.autoCompleteSearch.bind(this)
+    // this.toggleEditMode = this.toggleEditMode.bind(this)
+    // this.inputBlurred = this.inputBlurred.bind(this)
+    // this.inputFocused = this.inputFocused.bind(this)
+  }
+  render() {
+    let burgerClassname = 'navbar-toggler navbar-toggler-right'
+    let navlinksClassname = 'navbar-collapse'
+    if (this.state.collapsing) {
+      navlinksClassname += ' collapsing'
+    } else if (this.state.collapsed) {
+      navlinksClassname += ' collapse '
+    } else {
+      navlinksClassname += ' collapse show'
+    }
+    return (
+      <nav className="navbar fixed-top navbar-light bg-faded">
+        <button
+          className={burgerClassname}
+          type="button"
+          data-toggle="collapse"
+          data-target="#navbarText"
+          aria-controls="navbarText"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+          onClick={e => {
+            this.setState({collapsing: true})
+            window.setTimeout(() => {
+              this.setState({collapsing: false, collapsed: !this.state.collapsed})
+            }, 200)
+          }}>
+          <img
+            src={process.env.PUBLIC_URL + '/static/burger.svg'}
+            width="30" height="30" className="d-inline-block align-top" alt=""/>
+        </button>
+        <a
+          className="navbar-brand" href="/"
+          onClick={e => {
+            e.preventDefault()
+            const id = makeDayId(this.props.firstDateThisWeek)
+            document.querySelector('#' + id).scrollIntoView()
+          }}>
+          {/* <img
+            src={process.env.PUBLIC_URL + '/static/burger.svg'}
+            width="30" height="30" className="d-inline-block align-top" alt=""/> */}
+          Dinnerd
+        </a>
+        <div className={navlinksClassname} id="navbarNav">
+          <ul className="navbar-nav">
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                href="#"
+                onClick={e => {
+                  e.preventDefault()
+                  const id = makeDayId(this.props.firstDateThisWeek)
+                  document.querySelector('#' + id).scrollIntoView()
+                  this.setState({collasing: false, collapsed: true})
+                }}
+                >Go to <i>this</i> week</a>
+            </li>
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                href="#"
+                onClick={e => {
+                  e.preventDefault()
+                  console.log('Tell parent to load Settings view');
+                }}
+                >Settings</a>
+            </li>
+            {/* <li className="nav-item">
+              <a className="nav-link disabled" href="#">Disabled</a>
+            </li> */}
+          </ul>
+        </div>
+        {/* <span class="navbar-text">Text</span> */}
+        {/* <button className="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button> */}
+      </nav>
+    )
+  }
+}
 
 class Day extends Component {
 
   constructor() {
     super()
     this.state = {
+      edit: false,
       text: '',
       notes: '',
       starred: false,
@@ -250,6 +335,9 @@ class Day extends Component {
     }
     this.saveChanges = this.saveChanges.bind(this)
     this.autoCompleteSearch = this.autoCompleteSearch.bind(this)
+    this.toggleEditMode = this.toggleEditMode.bind(this)
+    this.inputBlurred = this.inputBlurred.bind(this)
+    this.inputFocused = this.inputFocused.bind(this)
   }
 
   componentDidMount() {
@@ -263,15 +351,39 @@ class Day extends Component {
     })
   }
 
-  saveChanges(event) {
-    // console.log("SEND", this.state.text, this.state.notes, this.state.starred);
+  toggleEditMode() {
+    this.setState({edit: !this.state.edit})
+  }
+
+  saveChanges() {
     this.props.updateDay(this.props.day, {
-      text: this.state.text,
-      notes: this.state.notes,
+      text: this.state.text.trim(),
+      notes: this.state.notes.trim(),
       starred: this.state.starred,
     }).then(r => {
-      this.setState({saved: true, searchResults: {}})
+      this.setState({
+        text: this.state.text.trim(),
+        notes: this.state.notes.trim(),
+        saved: true,
+        searchResults: {},
+      })
     })
+  }
+
+  inputBlurred(event) {
+    this.closeEditSoon = window.setTimeout(() => {
+      this.setState({edit: false})
+    }, 40000)
+  }
+
+  inputFocused(event) {
+    if (event.target.setSelectionRange) {
+      const inputLength = event.target.value.length
+      event.target.setSelectionRange(inputLength, inputLength)
+    }
+    if (this.closeEditSoon) {
+      window.clearTimeout(this.closeEditSoon)
+    }
   }
 
   autoCompleteSearch(text, field) {
@@ -281,73 +393,166 @@ class Day extends Component {
     this.setState({searchResults: searchResults})
   }
 
+  startEdit(focusOn = 'text') {
+    this.setState({edit: true}, () => {
+      const parentElement = document.querySelector(
+        '#' + makeDayId(this.props.day.datetime)
+      )
+      if (parentElement) {
+        const element = parentElement.querySelector(
+          `textarea.${focusOn}`
+        )
+        if (element) {
+          element.focus()
+        }
+      }
+    })
+  }
+
   render() {
     let { day, firstDateThisWeek } = this.props
-    return (
-      <div className="day">
-        { firstDateThisWeek ? <ShowWeekHeader datetime={day.datetime}/> : null }
-        <h3>{dateFns.format(day.datetime, 'dddd')}</h3>
-        <div className="textareas">
-          <div className="textarea">
-            <textarea
-              placeholder="Text..."
-              onBlur={this.saveChanges}
-              onChange={e => {
-                this.setState({text: e.target.value, saved: false}, () => {
-                  this.autoCompleteSearch(this.state.text, 'text')
-                })
-              }}
-              value={this.state.text}></textarea>
-            <ShowTextAutocomplete
-              text={this.state.text}
-              field="text"
-              results={this.state.searchResults.text}
-              picked={text => {
-                this.setState({text: text, saved: false, searchResults: {}})
-              }}
-            />
+    let display
+    if (this.state.edit) {
+      display = (
+        <div className="container">
+          <form onSubmit={e => {
+            // This will probably never trigger unless textareas are replaced with inputs
+            e.preventDefault()
+            console.log("FOrm submitted!");
+          }}>
+          <div className="textareas">
+            <div className="textarea">
+              <textarea
+                className="text form-control"
+                placeholder="Text..."
+                onBlur={this.inputBlurred}
+                onFocus={this.inputFocused}
+                onChange={e => {
+                  this.setState({text: e.target.value, saved: false}, () => {
+                    this.autoCompleteSearch(this.state.text, 'text')
+                  })
+                }}
+                value={this.state.text}></textarea>
+              <ShowTextAutocomplete
+                text={this.state.text}
+                field="text"
+                results={this.state.searchResults.text}
+                picked={text => {
+                  this.setState({text: text, saved: false, searchResults: {}})
+                }}
+              />
+
+            </div>
+            <div className="textarea">
+              <textarea
+                className="notes form-control"
+                placeholder="Notes..."
+                onBlur={this.inputBlurred}
+                onFocus={this.inputFocused}
+                onChange={e => {
+                  this.setState({notes: e.target.value, saved: false}, () => {
+                    this.autoCompleteSearch(this.state.notes, 'notes')
+                  })
+                }}
+                value={this.state.notes}></textarea>
+              <ShowTextAutocomplete
+                text={this.state.notes}
+                results={this.state.searchResults.notes}
+                field="notes"
+                picked={text => {
+                  this.setState({notes: text, saved: false, searchResults: {}})
+                }}
+              />
+            </div>
 
           </div>
-          <div className="textarea">
-            <textarea
-              placeholder="Notes..."
-              onBlur={this.saveChanges}
-              onChange={e => {
-                this.setState({notes: e.target.value, saved: false}, () => {
-                  this.autoCompleteSearch(this.state.notes, 'notes')
-                })
-              }}
-              value={this.state.notes}></textarea>
-            <ShowTextAutocomplete
-              text={this.state.notes}
-              results={this.state.searchResults.notes}
-              field="notes"
-              picked={text => {
-                this.setState({notes: text, saved: false, searchResults: {}})
-              }}
-            />
+          </form>
+          <div className="actions row">
+            <div className="action starred col-4">
+              <Heart
+                filled={this.state.starred}
+                bubble={e => {
+                  this.setState({starred: !this.state.starred}, this.saveChanges)
+                }}
+              />
+            </div>
+            <div className="action buttons col-8">
+              {
+                !this.state.saved ?
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={this.saveChanges}
+                  >Save</button>
+                  : null
+              }
+              {' '}
+              <button
+                type="button"
+                className="btn btn-info"
+                onClick={e => {
+                  this.setState({edit: false})
+                }}
+                >Close</button>
+            </div>
           </div>
         </div>
-        <div className="actions">
-          <div className="action">
-            <Heart
-              filled={this.state.starred}
-              bubble={e => {
-                this.setState({starred: !this.state.starred}, this.saveChanges)
-              }}
-            />
-          </div>
-          <div className="action">
-            <button
-              type="button"
-              onClick={this.saveChanges}
-              disabled={this.state.saved}
-              >Save</button>
-          </div>
+      )
+    } else {
+      // Regular display mode
+      display = (
+        <div>
+
+          {
+            !this.state.text.trim() ?
+            <p onClick={e => this.startEdit('text')}><i>empty</i></p>
+            : null
+          }
+          <p
+            className="text"
+            onClick={e => this.startEdit('text')}>
+            { this.state.text }
+            { this.state.starred ?
+              <Heart
+                filled={this.state.starred}
+                bubble={e => {}}
+              /> : null
+            }
+          </p>
+          <p
+            className="notes"
+            onClick={e => this.startEdit('notes')}>
+            { this.state.notes }
+          </p>
         </div>
+      )
+    }
+
+    return (
+      <div className="day" id={makeDayId(day.datetime)}>
+        { firstDateThisWeek ? <ShowWeekHeader datetime={day.datetime}/> : null }
+        <h5 className="weekday-head">{dateFns.format(day.datetime, 'dddd')}</h5>
+        { display }
       </div>
     )
   }
+}
+
+
+const ShowWeekHeader = ({ datetime }) => {
+  let lastDatetime = dateFns.addDays(datetime, 6)
+  const id = makeWeekId(datetime)
+  return (
+    <h3 className="week-head" id={id} onClick={e => {
+      document.querySelector('#' + id).scrollIntoView()
+    }}>
+      { dateFns.format(datetime, 'D MMM') }
+      {' '}
+      ...
+      {' '}
+      { dateFns.format(lastDatetime, 'D MMM') }
+    </h3>
+  )
 }
 
 

@@ -1,0 +1,14 @@
+body {
+  font-family: cursive !important;
+}
+
+.App-header {
+  color: #999 !important;
+  background-color: white !important;
+  height: 30px !important;
+}
+
+div.options,
+.App-logo {
+  display: none;
+}
