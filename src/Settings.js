@@ -1,29 +1,10 @@
 import React, { Component } from 'react'
+import { observer } from 'mobx-react'
+
+import store from './Store'
 
 
-class Defaults {
-  constructor() {
-    this.weekStartsOnAMonday = JSON.parse(
-      localStorage.getItem('weekStartsOnAMonday') || 'false'
-    )
-  }
-}
-
-export const settings = new Defaults()
-console.log('settings', settings);
-
-
-export default class Settings extends Component {
-  constructor() {
-    super()
-    this.state = {
-      weekStartsOnAMonday: settings.weekStartsOnAMonday,
-    }
-    // this.updateDay = this.updateDay.bind(this)
-    // this.searcher = this.searcher.bind(this)
-    // this.loadPreviousWeek = this.loadPreviousWeek.bind(this)
-    // this.loadNextWeek = this.loadNextWeek.bind(this)
-  }
+const Settings = observer(class Settings extends Component {
 
   render() {
     return (
@@ -35,14 +16,10 @@ export default class Settings extends Component {
               <input
                 type="checkbox"
                 className="form-check-input form-control-lg"
-                checked={this.state.weekStartsOnAMonday}
+                checked={store.settings.weekStartsOnAMonday}
                 onChange={e => {
-                  settings.weekStartsOnAMonday = e.target.checked
-                  localStorage.setItem(
-                    'weekStartsOnAMonday',
-                    JSON.stringify(e.target.checked)
-                  )
-                  this.setState({weekStartsOnAMonday: e.target.checked})
+                  store.setSetting('weekStartsOnAMonday', e.target.checked)
+                  this.props.onChangeWeekStart()
                 }}/>
               <b>Week starts on a Monday?</b>
             </label>
@@ -58,5 +35,6 @@ export default class Settings extends Component {
       </div>
     )
   }
+})
 
-}
+export default Settings

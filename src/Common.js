@@ -10,6 +10,17 @@ export const makeDayId = (datetime) => {
   return 'day-' + dateFns.format(datetime, 'YYYYMMDD')
 }
 
+export const ShowWeekHeaderDates = ({ start, end }) => {
+  return (
+    <span className="week-head-dates">
+      { dateFns.format(start, 'D MMM') }
+      {' '}
+      ...
+      {' '}
+      { dateFns.format(end, 'D MMM') }
+    </span>
+  )
+}
 
 export const Heart = ({ filled, bubble }) => {
   return (

@@ -2,7 +2,7 @@ import React, { Component } from 'react'
 import Highlighter from 'react-highlight-words'
 import dateFns from 'date-fns'
 
-import { makeDayId, makeWeekId, Heart } from './Common'
+import { makeDayId, makeWeekId, Heart, ShowWeekHeaderDates } from './Common'
 
 
 export default class Day extends Component {
@@ -227,7 +227,7 @@ export default class Day extends Component {
           {dateFns.format(day.datetime, 'dddd')}
           {' '}
           <span className="weekday-head-date">
-            {dateFns.format(day.datetime, 'Do MMM')}
+            { dateFns.format(day.datetime, 'Do MMM') }
           </span>
         </h5>
         { display }
@@ -238,18 +238,15 @@ export default class Day extends Component {
 
 
 const ShowWeekHeader = ({ datetime }) => {
-  let lastDatetime = dateFns.addDays(datetime, 6)
   const id = makeWeekId(datetime)
   return (
     <h3 className="week-head" id={id} onClick={e => {
       const id = makeDayId(datetime)
       document.querySelector('#' + id).scrollIntoView()
     }}>
-      { dateFns.format(datetime, 'D MMM') }
-      {' '}
-      ...
-      {' '}
-      { dateFns.format(lastDatetime, 'D MMM') }
+      <ShowWeekHeaderDates
+        start={datetime}
+        end={dateFns.addDays(datetime, 6)}/>
     </h3>
   )
 }

@@ -1,8 +1,11 @@
 import React, { Component } from 'react'
-import { makeDayId } from './Common'
+import dateFns from 'date-fns'
+import { observer } from 'mobx-react'
 
+import store from './Store'
+import { makeDayId, ShowWeekHeaderDates } from './Common'
 
-export default class Nav extends Component {
+const Nav = observer(class Nav extends Component {
   constructor() {
     super()
     this.state = {
@@ -20,6 +23,7 @@ export default class Nav extends Component {
     } else {
       navlinksClassname += ' collapse show'
     }
+
     return (
       <nav className="navbar fixed-top navbar-light bg-faded">
         <button
@@ -44,10 +48,19 @@ export default class Nav extends Component {
           className="navbar-brand" href="/"
           onClick={e => {
             e.preventDefault()
-            const id = makeDayId(this.props.firstDateThisWeek)
+            const id = makeDayId(store.firstDateThisWeek)
             document.querySelector('#' + id).scrollIntoView()
           }}>
           Dinnerd
+          {' '}
+          {
+            store.firstDateThisWeek ?
+            <ShowWeekHeaderDates
+              start={store.firstDateThisWeek}
+              end={dateFns.addDays(store.firstDateThisWeek, 6)}
+            /> :
+            null
+          }
         </a>
         <div className={navlinksClassname} id="navbarNav">
           <ul className="navbar-nav">
@@ -57,7 +70,8 @@ export default class Nav extends Component {
                 href="#"
                 onClick={e => {
                   e.preventDefault()
-                  const id = makeDayId(this.props.firstDateThisWeek)
+                  // console.log('GO TO', store.firstDateThisWeek);
+                  const id = makeDayId(store.firstDateThisWeek)
                   document.querySelector('#' + id).scrollIntoView()
                   this.setState({collasing: false, collapsed: true})
                 }}
@@ -74,14 +88,11 @@ export default class Nav extends Component {
                 }}
                 >Settings</a>
             </li>
-            {/* <li className="nav-item">
-              <a className="nav-link disabled" href="#">Disabled</a>
-            </li> */}
           </ul>
         </div>
-        {/* <span class="navbar-text">Text</span> */}
-        {/* <button className="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button> */}
       </nav>
     )
   }
-}
+})
+
+export default Nav
