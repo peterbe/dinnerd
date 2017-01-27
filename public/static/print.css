@@ -1,14 +1,19 @@
-body {
+body, h2, h3, h4, h5 {
   font-family: cursive !important;
 }
 
-.App-header {
-  color: #999 !important;
-  background-color: white !important;
-  height: 30px !important;
+.day p.text,
+.day p.notes {
+  text-align: center;
 }
 
+
 div.options,
-.App-logo {
-  display: none;
+nav {
+  display: none !important;
+}
+
+.day {
+  padding-top: 30px !important;
+  border-top: none !important;
 }

@@ -3,8 +3,9 @@ import './App.css'
 import dateFns from 'date-fns'
 import Highlighter from 'react-highlight-words'
 import lf from 'lovefield'
+import elasticlunr from 'elasticlunr'
 import getSchema from './Schema'
-import JsSearch from 'js-search'
+// import JsSearch from 'js-search'
 
 
 const DATE_FORMAT = 'YYYY-MM-DD'
@@ -44,12 +45,35 @@ class App extends Component {
 
     this.createDBConnection().then(() => {
 
-      this.searchIndex = new JsSearch.Search('days')
-      this.searchIndex.addIndex('text')
-      this.searchIndex.addIndex('notes')
-      this.searchIndex.addIndex('date')
+      // this.searchIndex = new JsSearch.Search('days')
+      // this.searchIndex.addIndex('text')
+      // this.searchIndex.addIndex('notes')
+      // this.searchIndex.addIndex('date')
+
+      // Set up the searchIndex before calling loadWeek() for the first time
+      this.searchIndex = elasticlunr(function () {
+        this.addField('text')
+        this.addField('notes')
+        // this.addField('starred')
+        // this.addField('datetime')
+        this.setRef('date')
+
+        // not store the original JSON document to reduce the index size
+        this.saveDocument(false)
+        // this.saveDocument(true)  // XXX right?
+      })
 
       this.loadWeek(this.firstDateThisWeek).then(() => {
+        // Populate the index with ALL days
+        const searchIndexAsJson = localStorage.getItem('searchIndex')
+        if (searchIndexAsJson) {
+          // override this.searchIndex
+          this.searchIndex = elasticlunr.Index.load(
+            JSON.parse(searchIndexAsJson)
+          )
+        } else {
+          this.populateWholeIndex()
+        }
       })
     })
 
@@ -59,6 +83,27 @@ class App extends Component {
     return this.schemaBuilder.connect().then(db => {
       this.db = db
     })
+  }
+
+  populateWholeIndex() {
+    let searchIndexAsJson = localStorage.getItem('searchIndex')
+    console.log('searchIndexAsJson', searchIndexAsJson);
+    if (searchIndexAsJson) {
+
+    } else {
+      const daysTable = this.db.getSchema().table('Days');
+      return this.db.select().from(daysTable)
+      .exec().then(results => {
+        results.forEach(result => {
+          this.searchIndex.addDoc({
+            date: result.date,
+            text: result.text,
+            notes: result.notes,
+          })
+        })
+        localStorage.setItem('searchIndex', JSON.stringify(this.searchIndex))
+      })
+    }
   }
 
   loadWeek(firstDate) {
@@ -81,14 +126,21 @@ class App extends Component {
       dayNumbers.forEach(d => {
         let datetime = dateFns.addDays(firstDate, d)
         let date = dateFns.format(datetime, DATE_FORMAT)
-        let indexDocuments = []
+        // let indexDocuments = []
         if (daysMap[date]) {
           days.push(daysMap[date])
-          indexDocuments.push({
-            date: daysMap[date].date,
-            text: daysMap[date].text,
-            notes: daysMap[date].notes,
-          })
+          // indexDocuments.push({
+          //   date: daysMap[date].date,
+          //   text: daysMap[date].text,
+          //   notes: daysMap[date].notes,
+          // })
+          // this.searchIndex.addDoc({
+          //   date: date,
+          //   datetime: daysMap[date].datetime,
+          //   text: daysMap[date].text,
+          //   notes: daysMap[date].notes,
+          //   starred: daysMap[date].starred,
+          // })
         } else {
           days.push({
             date: date,
@@ -98,9 +150,9 @@ class App extends Component {
             starred: false,
           })
         }
-        if (indexDocuments.length) {
-          this.searchIndex.addDocuments(indexDocuments)
-        }
+        // if (indexDocuments.length) {
+        //   this.searchIndex.addDocuments(indexDocuments)
+        // }
       })
       // days.sort((a, b) => a.datetime.getTime() - b.datetime.getTime())
       days.sort((a, b) => a.datetime - b.datetime)
@@ -121,11 +173,18 @@ class App extends Component {
     .then(inserted => {
       // console.log('INSERTED', inserted);
       inserted.forEach(day => {
-        this.searchIndex.addDocuments([{
+        this.searchIndex.addDoc({
           date: day.date,
+          datetime: day.datetime,
           text: day.text,
           notes: day.notes,
-        }])
+          starred: day.starred,
+        })
+        // this.searchIndex.addDocuments([{
+        //   date: day.date,
+        //   text: day.text,
+        //   notes: day.notes,
+        // }])
       })
       return inserted
     })
@@ -134,8 +193,56 @@ class App extends Component {
 
   }
 
-  searcher(text) {
-    return this.searchIndex.search(text)
+  searcher(text, field) {
+    if (!(field === 'text' || field === 'notes')) {
+      throw new Error(`Unrecognized field ${field}`)
+    }
+    let found = this.searchIndex.search(
+      text,
+      {
+        fields: {
+          text: field === 'text' ? 1 : 0,
+          notes: field === 'notes' ? 1 : 0,
+        },
+        // Important otherwise the suggestions won't go away when
+        // start typing a lot more.
+        bool: 'AND',
+        expand: true,
+      },
+    )
+    if (!found.length) {
+      return Promise.resolve([])
+    }
+    if (!this._searchCache) {
+      this._searchCache = {}  // XXX should perhaps be a capped cache object
+    }
+    let refs = {}
+    let cached = []
+    found.forEach(f => {
+      refs[f.ref] = f.score
+      if (this._searchCache[f.ref]) {
+        cached.push(this._searchCache[f.ref])
+      }
+    })
+    if (found.length === cached.length) {
+      // we had all of them cached!
+      console.log('hit lookup fully cached');
+      return Promise.resolve(cached)
+    }
+    const daysTable = this.db.getSchema().table('Days')
+    return this.db.select().from(daysTable)
+    .where(
+      daysTable.date.in(Object.keys(refs))
+    )
+    .exec().then(results => {
+      results.forEach(result => {
+        this._searchCache[result.date] = result
+      })
+      results.sort((a, b) => {
+        return refs[b.date] - refs[a.date]
+      })
+      return results
+    })
   }
 
   loadPreviousWeek(event) {
@@ -373,7 +480,7 @@ class Day extends Component {
   inputBlurred(event) {
     this.closeEditSoon = window.setTimeout(() => {
       this.setState({edit: false})
-    }, 40000)
+    }, 400)
   }
 
   inputFocused(event) {
@@ -387,10 +494,19 @@ class Day extends Component {
   }
 
   autoCompleteSearch(text, field) {
+    if (text.length < 2) {
+      if (this.state.searchResults[field]) {
+        this.setState({searchResults: {}})
+      }
+      return
+    }
     const { searcher } = this.props
     let searchResults = {}
-    searchResults[field] = searcher(text, field)
-    this.setState({searchResults: searchResults})
+    searcher(text, field).then(results => {
+      searchResults[field] = results
+
+      this.setState({searchResults: searchResults})
+    })
   }
 
   startEdit(focusOn = 'text') {
@@ -504,7 +620,7 @@ class Day extends Component {
         <div>
 
           {
-            !this.state.text.trim() ?
+            !this.state.text.trim() && !this.state.notes.trim() ?
             <p onClick={e => this.startEdit('text')}><i>empty</i></p>
             : null
           }
@@ -531,7 +647,13 @@ class Day extends Component {
     return (
       <div className="day" id={makeDayId(day.datetime)}>
         { firstDateThisWeek ? <ShowWeekHeader datetime={day.datetime}/> : null }
-        <h5 className="weekday-head">{dateFns.format(day.datetime, 'dddd')}</h5>
+        <h5 className="weekday-head">
+          {dateFns.format(day.datetime, 'dddd')}
+          {' '}
+          <span className="weekday-head-date">
+            {dateFns.format(day.datetime, 'Do MMM')}
+          </span>
+        </h5>
         { display }
       </div>
     )
