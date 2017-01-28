@@ -1,5 +1,5 @@
 import { action, extendObservable } from 'mobx'
-import { autorun } from 'mobx'
+// import { autorun } from 'mobx'
 
 
 class Store {
@@ -21,7 +21,7 @@ const store = window.store = new Store()
 
 export default store
 
-autorun(() => {
-  // console.log('Store changed DAYS:', store.days, store.settings);
-  console.log('Store changed DAYS:', store.days.length)
-})
+// autorun(() => {
+//   // console.log('Store changed DAYS:', store.days, store.settings);
+//   console.log('Store changed DAYS:', store.days.length)
+// })

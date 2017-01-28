@@ -28,7 +28,7 @@ const Settings = observer(class Settings extends Component {
         <button
           type="button"
           className="btn btn-primary btn-block"
-          onClick={this.props.closeSettings}
+          onClick={this.props.onClosePage}
           >
           Close Settings
         </button>

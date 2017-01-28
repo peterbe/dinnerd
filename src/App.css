@@ -48,7 +48,7 @@
   /*border-right:1px solid red;*/
 }
 
-.day .action.buttons {
+.action.buttons {
   text-align: right;
 }
 
@@ -76,12 +76,17 @@
   font-size: 1em;
 }
 
-.day p {
+.display-day p {
   margin: 3px;
   line-height: 1.3;
 }
 
-.day p.text,
+.display-day p.text,
 textarea.text {
   font-weight: bold;
+}
+
+
+.search-results .search-result {
+  margin: 20px 0;
 }

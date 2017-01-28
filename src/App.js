@@ -9,7 +9,9 @@ import getSchema from './Schema'
 import Nav from './Nav'
 import Days from './Days'
 import Settings from './Settings'
+import Search from './Search'
 import store from './Store'
+import { makeDayId } from './Common'
 
 const DATE_FORMAT = 'YYYY-MM-DD'
 
@@ -17,10 +19,14 @@ const DATE_FORMAT = 'YYYY-MM-DD'
 const App = observer(class App extends Component {
   constructor() {
     super()
-    this.state = {
-      show: 'days',
+
+    let defaultPage = 'days'
+    if (document.location.hash.match(/^#page:(\w+)/)) {
+      defaultPage = document.location.hash.match(/^#page:(\w+)/)[1]
     }
-    // this.loadWeek = this.loadWeek.bind(this)
+    this.state = {
+      page: defaultPage,
+    }
   }
 
   componentWillMount() {
@@ -187,6 +193,9 @@ const App = observer(class App extends Component {
       notes: data.notes,
       starred: data.starred,
     })
+    console.log("NEED TO UPDATE store.days");
+    console.log(store.days);
+
     return this.db.insertOrReplace().into(daysTable).values([row]).exec()
     .then(inserted => {
       // console.log('INSERTED', inserted);
@@ -204,6 +213,11 @@ const App = observer(class App extends Component {
         //   notes: day.notes,
         // }])
       })
+      // localStorage.getItem('searchIndex')
+      localStorage.setItem(
+        'searchIndex',
+        JSON.stringify(this.searchIndex)
+      )
       return inserted
     })
     //
@@ -211,22 +225,23 @@ const App = observer(class App extends Component {
   }
 
 
-  searcher(text, field) {
-    if (!(field === 'text' || field === 'notes')) {
-      throw new Error(`Unrecognized field ${field}`)
-    }
+  searcher(text, searchConfig) {
+    // if (!(field === 'text' || field === 'notes')) {
+    //   throw new Error(`Unrecognized field ${field}`)
+    // }
     let found = this.searchIndex.search(
       text,
-      {
-        fields: {
-          text: field === 'text' ? 1 : 0,
-          notes: field === 'notes' ? 1 : 0,
-        },
-        // Important otherwise the suggestions won't go away when
-        // start typing a lot more.
-        bool: 'AND',
-        expand: true,
-      },
+      searchConfig,
+      // {
+      //   fields: {
+      //     text: field === 'text' ? 1 : 0,
+      //     notes: field === 'notes' ? 1 : 0,
+      //   },
+      //   // Important otherwise the suggestions won't go away when
+      //   // start typing a lot more.
+      //   bool: 'AND',
+      //   expand: true,
+      // },
     )
     if (!found.length) {
       return Promise.resolve([])
@@ -238,6 +253,7 @@ const App = observer(class App extends Component {
     let cached = []
     found.forEach(f => {
       refs[f.ref] = f.score
+      // XXX this cache should be "purge" when days are edited and saved
       if (this._searchCache[f.ref]) {
         cached.push(this._searchCache[f.ref])
       }
@@ -266,22 +282,29 @@ const App = observer(class App extends Component {
 
   render() {
     let page = <p>Loading...</p>
-    if (this.state.show === 'days') {
+    if (this.state.page === 'days') {
       page = <Days
         searcher={this.searcher.bind(this)}
         loadWeek={this.loadWeek.bind(this)}
         updateDay={this.updateDay.bind(this)}
         // firstDateThisWeek={store.firstDateThisWeek}
       />
-    } else if (this.state.show === 'settings') {
+    } else if (this.state.page === 'settings') {
       page = <Settings
-        closeSettings={e => {
-          this.setState({show: 'days'})
-          // this.loadInitialWeek()
+        onClosePage={e => {
+          this.setState({page: 'days'})
         }}
         onChangeWeekStart={() => {
           // if the user has changed start day of the week, re-load
           this.loadInitialWeek()
+        }}
+      />
+    } else if (this.state.page === 'search') {
+      page = <Search
+        searcher={this.searcher.bind(this)}
+        onClosePage={e => {
+          this.setState({page: 'days'})
+          // this.loadInitialWeek()
         }}
       />
     }
@@ -289,14 +312,22 @@ const App = observer(class App extends Component {
     return (
       <div className="container">
         <Nav
+          onGotoWeek={() => {
+            this.setState({page: 'days'}, () => {
+              console.log('Have switched to days');
+              const id = makeDayId(store.firstDateThisWeek)
+              console.log('ID',id);
+              document.querySelector('#' + id).scrollIntoView()
+            })
+          }}
           onGotoSettings={() => {
-            this.setState({show: 'settings'})
+            this.setState({page: 'settings'})
           }}
           onGotoStarred={() => {
-            this.setState({show: 'starred'})
+            this.setState({page: 'starred'})
           }}
           onGotoSearch={() => {
-            this.setState({show: 'search'})
+            this.setState({page: 'search'})
           }}
 
         />

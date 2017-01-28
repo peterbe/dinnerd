@@ -3,7 +3,7 @@ import dateFns from 'date-fns'
 import { observer } from 'mobx-react'
 
 import store from './Store'
-import { makeDayId, ShowWeekHeaderDates, Heart } from './Common'
+import { ShowWeekHeaderDates, Heart } from './Common'
 
 const Nav = observer(class Nav extends Component {
   constructor() {
@@ -45,11 +45,12 @@ const Nav = observer(class Nav extends Component {
             width="30" height="30" className="d-inline-block align-top" alt=""/>
         </button>
         <a
-          className="navbar-brand" href="/"
+          className="navbar-brand" href="#"
           onClick={e => {
-            e.preventDefault()
-            const id = makeDayId(store.firstDateThisWeek)
-            document.querySelector('#' + id).scrollIntoView()
+            // e.preventDefault()
+            this.props.onGotoWeek()
+            // const id = makeDayId(store.firstDateThisWeek)
+            // document.querySelector('#' + id).scrollIntoView()
           }}>
           Dinnerd
           {' '}
@@ -69,20 +70,20 @@ const Nav = observer(class Nav extends Component {
                 className="nav-link"
                 href="#"
                 onClick={e => {
-                  e.preventDefault()
-                  // console.log('GO TO', store.firstDateThisWeek);
-                  const id = makeDayId(store.firstDateThisWeek)
-                  document.querySelector('#' + id).scrollIntoView()
-                  this.setState({collasing: false, collapsed: true})
+                  // e.preventDefault()
+                  // const id = makeDayId(store.firstDateThisWeek)
+                  // document.querySelector('#' + id).scrollIntoView()
+                  this.setState({collapsing: false, collapsed: true})
+                  this.props.onGotoWeek()
                 }}
                 >Go to <i>this</i> week</a>
             </li>
             <li className="nav-item">
               <a
                 className="nav-link"
-                href="#"
+                href="#page:settings"
                 onClick={e => {
-                  e.preventDefault()
+                  // e.preventDefault()
                   this.setState({collapsed: true})
                   this.props.onGotoSettings()
                 }}
@@ -91,9 +92,9 @@ const Nav = observer(class Nav extends Component {
             <li className="nav-item">
               <a
                 className="nav-link"
-                href="#"
+                href="#page:search"
                 onClick={e => {
-                  e.preventDefault()
+                  // e.preventDefault()
                   this.setState({collapsed: true})
                   this.props.onGotoSearch()
                 }}
@@ -104,9 +105,9 @@ const Nav = observer(class Nav extends Component {
             <li className="nav-item">
               <a
                 className="nav-link"
-                href="#"
+                href="#page:starred"
                 onClick={e => {
-                  e.preventDefault()
+                  // e.preventDefault()
                   this.setState({collapsed: true})
                   this.props.onGotoStarred()
                 }}

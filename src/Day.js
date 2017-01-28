@@ -83,7 +83,17 @@ const Day = observer(class Day extends Component {
     }
     const { searcher } = this.props
     let searchResults = {}
-    searcher(text, field).then(results => {
+    const searchConfig = {
+      fields: {
+        text: field === 'text' ? 1 : 0,
+        notes: field === 'notes' ? 1 : 0,
+      },
+      // Important otherwise the suggestions won't go away when
+      // start typing a lot more.
+      bool: 'AND',
+      expand: true,
+    }
+    searcher(text, searchConfig).then(results => {
       searchResults[field] = results
 
       this.setState({searchResults: searchResults})
@@ -128,6 +138,7 @@ const Day = observer(class Day extends Component {
                 onFocus={this.inputFocused}
                 onChange={e => {
                   this.setState({text: e.target.value, saved: false}, () => {
+                    // XXX debounch needed here
                     this.autoCompleteSearch(this.state.text, 'text')
                   })
                 }}
@@ -263,32 +274,13 @@ const Day = observer(class Day extends Component {
       )
     } else {
       // Regular display mode
-      display = (
-        <div>
-          {
-            !this.state.text.trim() && !this.state.notes.trim() ?
-            <p onClick={e => this.startEdit('text')}><i>empty</i></p>
-            : null
-          }
-          <p
-            className="text"
-            onClick={e => this.startEdit('text')}>
-            { this.state.text }
-            { this.state.starred ?
-              <Heart
-                size={16}
-                filled={this.state.starred}
-                bubble={e => {}}
-              /> : null
-            }
-          </p>
-          <p
-            className="notes"
-            onClick={e => this.startEdit('notes')}>
-            { this.state.notes }
-          </p>
-        </div>
-      )
+      display = <DisplayDay
+        text={this.state.text}
+        notes={this.state.notes}
+        starred={this.state.starred}
+        fieldClicked={field => {
+          this.startEdit(field)
+        }}/>
     }
 
     return (
@@ -297,9 +289,7 @@ const Day = observer(class Day extends Component {
         <h5 className="weekday-head">
           {dateFns.format(day.datetime, 'dddd')}
           {' '}
-          <span className="weekday-head-date">
-            { dateFns.format(day.datetime, 'Do MMM') }
-          </span>
+          <ShowWeekdayHeadDate datetime={day.datetime}/>
         </h5>
         { display }
       </div>
@@ -309,6 +299,56 @@ const Day = observer(class Day extends Component {
 
 export default Day
 
+
+const ShowWeekdayHeadDate = ({ datetime }) => {
+  const now = new Date()
+  let text
+  if (dateFns.isToday(datetime)) {
+    text = 'Today'
+  } else if (dateFns.isYesterday(datetime)) {
+    text = 'Yesterday'
+  } else if (dateFns.isTomorrow(datetime)) {
+    text = 'Tomorrow'
+  } else {
+    text = dateFns.distanceInWordsStrict(now, datetime, {addSuffix: true})
+  }
+
+  return (
+    <span className="weekday-head-date">
+      { text }
+    </span>
+  )
+
+}
+
+export const DisplayDay = ({ text, notes, starred, fieldClicked }) => {
+  return (
+    <div className="display-day">
+      {
+        !text.trim() && !notes.trim() ?
+        <p onClick={e => fieldClicked('text')}><i>empty</i></p>
+        : null
+      }
+      <p
+        className="text"
+        onClick={e => fieldClicked('text')}>
+        { text }
+        { starred ?
+          <Heart
+            size={16}
+            filled={starred}
+            bubble={e => {}}
+          /> : null
+        }
+      </p>
+      <p
+        className="notes"
+        onClick={e => fieldClicked('notes')}>
+        { notes }
+      </p>
+    </div>
+  )
+}
 
 const ShowWeekHeader = ({ datetime }) => {
   const id = makeWeekId(datetime)
