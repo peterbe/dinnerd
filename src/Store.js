@@ -6,14 +6,12 @@ class Store {
   constructor() {
     extendObservable(this, {
       days: [],
+      copied: null,
       firstDateThisWeek: null,
       settings: JSON.parse(localStorage.getItem('settings') || '{}'),
       setSetting: action((key, value) => {
         this.settings[key] = value
         localStorage.setItem('settings', JSON.stringify(this.settings))
-        // if (key === 'weekStartsOnAMonday') {
-        //
-        // }
       }),
     })
   }

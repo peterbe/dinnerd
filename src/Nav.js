@@ -3,7 +3,7 @@ import dateFns from 'date-fns'
 import { observer } from 'mobx-react'
 
 import store from './Store'
-import { makeDayId, ShowWeekHeaderDates } from './Common'
+import { makeDayId, ShowWeekHeaderDates, Heart } from './Common'
 
 const Nav = observer(class Nav extends Component {
   constructor() {
@@ -83,10 +83,54 @@ const Nav = observer(class Nav extends Component {
                 href="#"
                 onClick={e => {
                   e.preventDefault()
-                  this.props.onGotoSettings()
                   this.setState({collapsed: true})
+                  this.props.onGotoSettings()
                 }}
                 >Settings</a>
+            </li>
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                href="#"
+                onClick={e => {
+                  e.preventDefault()
+                  this.setState({collapsed: true})
+                  this.props.onGotoSearch()
+                }}
+                >
+                  Search
+                </a>
+            </li>
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                href="#"
+                onClick={e => {
+                  e.preventDefault()
+                  this.setState({collapsed: true})
+                  this.props.onGotoStarred()
+                }}
+                >
+                  <Heart
+                    filled={true}
+                    bubble={e => {
+                      // this.setState({starred: !this.state.starred}, this.saveChanges)
+                    }}
+                  />
+                  Favorites
+                </a>
+            </li>
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                href="#"
+                onClick={e => {
+                  e.preventDefault()
+                  window.print()
+                  // this.props.onGotoSettings()
+                  // this.setState({collapsed: true})
+                }}
+                >Print</a>
             </li>
           </ul>
         </div>

@@ -286,12 +286,17 @@ const App = observer(class App extends Component {
       />
     }
 
-    console.log('REndering Nav with:', this.firstDateThisWeek);
     return (
       <div className="container">
         <Nav
           onGotoSettings={() => {
             this.setState({show: 'settings'})
+          }}
+          onGotoStarred={() => {
+            this.setState({show: 'starred'})
+          }}
+          onGotoSearch={() => {
+            this.setState({show: 'search'})
           }}
 
         />

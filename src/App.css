@@ -44,6 +44,8 @@
 .day .actions .action {
   /*width: 50%;*/
   padding-top: 10px;
+
+  /*border-right:1px solid red;*/
 }
 
 .day .action.buttons {
@@ -55,6 +57,7 @@
   /*border-top: 1px solid #efefef;*/
   margin-top: 40px;
   padding-top: 10px;
+  margin-bottom: 20px;
 }
 
 .day {

@@ -1,16 +1,19 @@
 import React, { Component } from 'react'
 import Highlighter from 'react-highlight-words'
 import dateFns from 'date-fns'
+import { observer } from 'mobx-react'
 
 import { makeDayId, makeWeekId, Heart, ShowWeekHeaderDates } from './Common'
+import store from './Store'
 
 
-export default class Day extends Component {
+const Day = observer(class Day extends Component {
 
   constructor() {
     super()
     this.state = {
       edit: false,
+      saving: false,
       text: '',
       notes: '',
       starred: false,
@@ -30,6 +33,8 @@ export default class Day extends Component {
       notes: day.notes,
       starred: day.starred,
       saved: true,
+      hadText: false,
+      saving: false,
       // searchResults: [],
     })
   }
@@ -56,7 +61,7 @@ export default class Day extends Component {
   inputBlurred(event) {
     this.closeEditSoon = window.setTimeout(() => {
       this.setState({edit: false})
-    }, 400)
+    }, 300)
   }
 
   inputFocused(event) {
@@ -86,7 +91,8 @@ export default class Day extends Component {
   }
 
   startEdit(focusOn = 'text') {
-    this.setState({edit: true}, () => {
+    const hadText = !!this.state.text
+    this.setState({edit: true, hadText: hadText}, () => {
       const parentElement = document.querySelector(
         '#' + makeDayId(this.props.day.datetime)
       )
@@ -104,6 +110,7 @@ export default class Day extends Component {
   render() {
     let { day, firstDateThisWeek } = this.props
     let display
+    // console.log('store.copied:', store.copied);
     if (this.state.edit) {
       display = (
         <div className="container">
@@ -170,22 +177,86 @@ export default class Day extends Component {
             </div>
             <div className="action buttons col-8">
               {
-                !this.state.saved ?
+                !this.state.saved || this.state.saving ?
                 <button
                   type="button"
-                  className="btn btn-primary"
-                  onClick={this.saveChanges}
-                  >Save</button>
+                  className="btn btn-primary btn-sm"
+                  disabled={this.state.saving}
+                  onClick={e => {
+                    this.saveChanges()
+                    // If there was focus on any inputs, and you press a
+                    // button like that, that input triggers its onBlur,
+                    // so we want to prevent that from happening.
+                    if (this.closeEditSoon) {
+                      window.clearTimeout(this.closeEditSoon)
+                    }
+                    this.setState({saving: true})
+                    setTimeout(() => {
+                      this.setState({edit: false, saving: false})
+                    }, 1000)
+                  }}
+                  >{ this.state.saving ? 'Saving' : 'Save'}</button>
                   : null
               }
               {' '}
               <button
                 type="button"
-                className="btn btn-info"
+                className="btn btn-info btn-sm"
                 onClick={e => {
                   this.setState({edit: false})
                 }}
                 >Close</button>
+              {' '}
+              {
+                this.state.text && this.state.hadText ?
+                <button
+                  type="button"
+                  className="btn btn-info btn-sm"
+                  onClick={e => {
+                    store.copied = {
+                      date: day.date,
+                      text: this.state.text,
+                      notes: this.state.notes,
+                      starred: this.state.starred
+                    }
+                    setTimeout(() => {
+                      this.setState({edit: false})
+                    }, 1000)
+                  }}
+                  >
+                  {
+                    store.copied && store.copied.date === day.date ?
+                    'Copied': 'Copy'
+                  }
+
+                </button>
+                : null
+              }
+              {' '}
+              {
+                store.copied && store.copied.date !== day.date && store.copied.text !== this.state.text ?
+                <button
+                  type="button"
+                  className="btn btn-warning btn-sm"
+                  onClick={e => {
+                    this.setState({
+                      text: store.copied.text,
+                      notes: store.copied.notes,
+                      starred: store.copied.starred,
+                      saved: false,
+                    })
+                    // If there was focus on any inputs, and you press a
+                    // button like that, that input triggers its onBlur,
+                    // so we want to prevent that from happening.
+                    if (this.closeEditSoon) {
+                      window.clearTimeout(this.closeEditSoon)
+                    }
+                    // this.saveChanges()
+                  }}>
+                  Paste
+                </button>
+                : null
+              }
             </div>
           </div>
         </div>
@@ -234,7 +305,9 @@ export default class Day extends Component {
       </div>
     )
   }
-}
+})
+
+export default Day
 
 
 const ShowWeekHeader = ({ datetime }) => {
@@ -247,8 +320,37 @@ const ShowWeekHeader = ({ datetime }) => {
       <ShowWeekHeaderDates
         start={datetime}
         end={dateFns.addDays(datetime, 6)}/>
+      {/* <button
+        type="button"
+        className="btn btn-primary btn-sm">Print</button> */}
     </h3>
   )
+  // return (
+  //   <div className="container week-head" id={id}>
+  //     <div className="row">
+  //       <div className="col-9">
+  //         <h3 className="" id={id} onClick={e => {
+  //           const id = makeDayId(datetime)
+  //           document.querySelector('#' + id).scrollIntoView()
+  //         }}>
+  //           <ShowWeekHeaderDates
+  //             start={datetime}
+  //             end={dateFns.addDays(datetime, 6)}/>
+  //
+  //         </h3>
+  //       </div>
+  //       <div className="col-3">
+  //         <button
+  //           type="button"
+  //           className="btn btn-primary btn-sm"
+  //           onClick={e => {
+  //             // might need to make sure all days are NOT in edit mode
+  //             window.print()
+  //           }}>Print</button>
+  //       </div>
+  //     </div>
+  //   </div>
+  // )
 }
 
 
