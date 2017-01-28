@@ -8,6 +8,7 @@ class Store {
       days: [],
       copied: null,
       firstDateThisWeek: null,
+      recentFavorites: [],
       settings: JSON.parse(localStorage.getItem('settings') || '{}'),
       setSetting: action((key, value) => {
         this.settings[key] = value

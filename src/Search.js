@@ -21,11 +21,36 @@ const Search = observer(class Search extends Component {
     // this.inputFocused = this.inputFocused.bind(this)
   }
 
+  // componentDidMount() {
+  //   console.log('Search has been mounted', this.props.favorites);
+  //   const favorites = this.props.favorites || false
+  //   if (favorites) {
+  //     // make a first search
+  //     this.setState({searching: true})
+  //     this.props.getFavorites().then(results => {
+  //       let searchResults = []
+  //       let texts = {} // XXX Change to use Set
+  //       results.forEach(result => {
+  //         if (!texts[result.text]) {
+  //           texts[result.text] = 1
+  //           // searchResults.push({
+  //             throw new Error('work harder')
+  //           // })
+  //         }
+  //       })
+  //       this.setState({searchResults: searchResults, earching: false})
+  //     })
+  //   }
+  // }
+
   render() {
+
+    const favorites = this.props.favorites || false
+    console.log('Favorites:', store.recentFavorites.length);
 
     return (
       <div className="search" style={{marginTop: 40}}>
-        <h3>Search</h3>
+        <h3>{ favorites ? 'Favorites' : 'Search' }</h3>
         <form onSubmit={e => {
           e.preventDefault()
           console.log('Form submitted!');
@@ -35,11 +60,8 @@ const Search = observer(class Search extends Component {
             className="form-control"
             onChange={e => {
               this.setState({search: e.target.value}, () => {
-                // XXX should debounce
-
                 if (!this.state.searching && this.state.search.length > 2) {
                   // this.startSearchTimer = window.setTimeout(() => {
-                    console.log("Start autocomplete search!", this.state.search);
                     this.setState({searching: true})
                     this.props.searcher(this.state.search, {
                       fields: {
@@ -84,7 +106,7 @@ const Search = observer(class Search extends Component {
           className="btn btn-primary btn-block"
           onClick={this.props.onClosePage}
           >
-          Close Search
+          { favorites ? 'Close Favorites' : 'Close Search' }
         </button>
       </div>
     )

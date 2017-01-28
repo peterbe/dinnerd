@@ -38,52 +38,46 @@ const App = observer(class App extends Component {
   }
 
   componentDidMount() {
+    console.log('App has been mounted');
     this.createDBConnection().then(() => {
-      // const searchIndexAsJson = localStorage.getItem('searchIndex')
-      // if (searchIndexAsJson) {
-      //   // override this.searchIndex
-      //   this.searchIndex = elasticlunr.Index.load(
-      //     JSON.parse(searchIndexAsJson)
-      //   )
-      // } else {
-      //   this.populateWholeIndex().then(() => {
-      //     localStorage.setItem(
-      //       'searchIndex',
-      //       JSON.stringify(this.searchIndex)
-      //     )
-      //   })
-      // }
+      console.log('DB connection made', this.db);
+      console.log("PAGE", this.state.page);
 
-      this.loadInitialWeek().then(() => {
-        // Populate the index with ALL days
-        const searchIndexAsJson = localStorage.getItem('searchIndex')
-        if (searchIndexAsJson) {
-          // override this.searchIndex
-          this.searchIndex = elasticlunr.Index.load(
-            JSON.parse(searchIndexAsJson)
-          )
-        } else {
-          // Set up the searchIndex before calling loadWeek() for the first time
-          this.searchIndex = elasticlunr(function () {
-            this.addField('text')
-            this.addField('notes')
-            // this.addField('starred')
-            // this.addField('datetime')
-            this.setRef('date')
-
-            // not store the original JSON document to reduce the index size
-            this.saveDocument(false)
-            // this.saveDocument(true)  // XXX right?
-          })
-          this.populateWholeIndex().then(() => {
-            localStorage.setItem(
-              'searchIndex',
-              JSON.stringify(this.searchIndex)
+      if (this.state.page === 'starred') {
+        this.getFavorites().then(favorites => {
+          store.recentFavorites = favorites
+        })
+      } else {
+        this.loadInitialWeek().then(() => {
+          // Populate the index with ALL days
+          const searchIndexAsJson = localStorage.getItem('searchIndex')
+          if (searchIndexAsJson) {
+            // override this.searchIndex
+            this.searchIndex = elasticlunr.Index.load(
+              JSON.parse(searchIndexAsJson)
             )
-          })
+          } else {
+            // Set up the searchIndex before calling loadWeek() for the first time
+            this.searchIndex = elasticlunr(function () {
+              this.addField('text')
+              this.addField('notes')
+              // this.addField('starred')
+              // this.addField('datetime')
+              this.setRef('date')
 
-        }
-      })
+              // not store the original JSON document to reduce the index size
+              this.saveDocument(false)
+              // this.saveDocument(true)  // XXX right?
+            })
+            this.populateWholeIndex().then(() => {
+              localStorage.setItem(
+                'searchIndex',
+                JSON.stringify(this.searchIndex)
+              )
+            })
+          }
+        })
+      }
     })
   }
 
@@ -224,6 +218,18 @@ const App = observer(class App extends Component {
     // let rows = this.state.days
   }
 
+  getFavorites() {
+    const daysTable = this.db.getSchema().table('Days');
+    // THIS ISN'T WORKING :(
+    // https://groups.google.com/d/msg/lovefield-users/402QdlCvSKY/EXxA-b0nBwAJ
+    return this.db.select().from(daysTable)
+    .where(
+      daysTable.starred.eq('true')
+    )
+    .exec().then(results => {
+      return results
+    })
+  }
 
   searcher(text, searchConfig) {
     // if (!(field === 'text' || field === 'notes')) {
@@ -282,14 +288,8 @@ const App = observer(class App extends Component {
 
   render() {
     let page = <p>Loading...</p>
-    if (this.state.page === 'days') {
-      page = <Days
-        searcher={this.searcher.bind(this)}
-        loadWeek={this.loadWeek.bind(this)}
-        updateDay={this.updateDay.bind(this)}
-        // firstDateThisWeek={store.firstDateThisWeek}
-      />
-    } else if (this.state.page === 'settings') {
+
+    if (this.state.page === 'settings') {
       page = <Settings
         onClosePage={e => {
           this.setState({page: 'days'})
@@ -301,11 +301,33 @@ const App = observer(class App extends Component {
       />
     } else if (this.state.page === 'search') {
       page = <Search
+        favorites={false}
         searcher={this.searcher.bind(this)}
         onClosePage={e => {
           this.setState({page: 'days'})
           // this.loadInitialWeek()
         }}
+      />
+    } else if (this.state.page === 'starred') {
+      page = <Search
+        favorites={true}
+        getFavorites={this.getFavorites.bind(this)}
+        searcher={this.searcher.bind(this)}
+        onClosePage={e => {
+          this.setState({page: 'days'})
+          // this.loadInitialWeek()
+        }}
+      />
+    } else {
+      if (page !== 'days') {
+        // throw new Error(`Unsure about page '${page}'`)
+        console.warn(`Unsure about page '${page}'`)
+      }
+      page = <Days
+        searcher={this.searcher.bind(this)}
+        loadWeek={this.loadWeek.bind(this)}
+        updateDay={this.updateDay.bind(this)}
+        // firstDateThisWeek={store.firstDateThisWeek}
       />
     }
 
