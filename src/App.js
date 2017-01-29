@@ -33,15 +33,8 @@ const App = observer(class App extends Component {
     this.schemaBuilder = getSchema()
   }
 
-  componentWillReceiveProps(props) {
-    console.warn("Perhaps the store.settings has changed!");
-  }
-
   componentDidMount() {
-    console.log('App has been mounted');
     this.createDBConnection().then(() => {
-      console.log('DB connection made', this.db);
-      console.log("PAGE", this.state.page);
 
       if (this.state.page === 'starred') {
         this.getFavorites().then(favorites => {
@@ -187,8 +180,11 @@ const App = observer(class App extends Component {
       notes: data.notes,
       starred: data.starred,
     })
-    console.log("NEED TO UPDATE store.days");
-    console.log(store.days);
+
+    // don't forget to update the big mutable
+    day.text = data.text
+    day.notes = data.notes
+    day.starred = data.starred
 
     return this.db.insertOrReplace().into(daysTable).values([row]).exec()
     .then(inserted => {
@@ -201,21 +197,13 @@ const App = observer(class App extends Component {
           notes: day.notes,
           starred: day.starred,
         })
-        // this.searchIndex.addDocuments([{
-        //   date: day.date,
-        //   text: day.text,
-        //   notes: day.notes,
-        // }])
       })
-      // localStorage.getItem('searchIndex')
       localStorage.setItem(
         'searchIndex',
         JSON.stringify(this.searchIndex)
       )
       return inserted
     })
-    //
-    // let rows = this.state.days
   }
 
   getFavorites() {
@@ -319,9 +307,9 @@ const App = observer(class App extends Component {
         }}
       />
     } else {
-      if (page !== 'days') {
+      if (this.state.page !== 'days') {
         // throw new Error(`Unsure about page '${page}'`)
-        console.warn(`Unsure about page '${page}'`)
+        console.warn(`Unsure about page '${this.state.page}'`)
       }
       page = <Days
         searcher={this.searcher.bind(this)}
@@ -336,9 +324,7 @@ const App = observer(class App extends Component {
         <Nav
           onGotoWeek={() => {
             this.setState({page: 'days'}, () => {
-              console.log('Have switched to days');
               const id = makeDayId(store.firstDateThisWeek)
-              console.log('ID',id);
               document.querySelector('#' + id).scrollIntoView()
             })
           }}

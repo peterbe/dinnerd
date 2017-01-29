@@ -14,39 +14,11 @@ const Search = observer(class Search extends Component {
       searching: false,
       searchResults: null,
     }
-    // this.saveChanges = this.saveChanges.bind(this)
-    // this.autoCompleteSearch = this.autoCompleteSearch.bind(this)
-    // this.toggleEditMode = this.toggleEditMode.bind(this)
-    // this.inputBlurred = this.inputBlurred.bind(this)
-    // this.inputFocused = this.inputFocused.bind(this)
   }
-
-  // componentDidMount() {
-  //   console.log('Search has been mounted', this.props.favorites);
-  //   const favorites = this.props.favorites || false
-  //   if (favorites) {
-  //     // make a first search
-  //     this.setState({searching: true})
-  //     this.props.getFavorites().then(results => {
-  //       let searchResults = []
-  //       let texts = {} // XXX Change to use Set
-  //       results.forEach(result => {
-  //         if (!texts[result.text]) {
-  //           texts[result.text] = 1
-  //           // searchResults.push({
-  //             throw new Error('work harder')
-  //           // })
-  //         }
-  //       })
-  //       this.setState({searchResults: searchResults, earching: false})
-  //     })
-  //   }
-  // }
 
   render() {
 
     const favorites = this.props.favorites || false
-    console.log('Favorites:', store.recentFavorites.length);
 
     return (
       <div className="search" style={{marginTop: 40}}>
@@ -69,11 +41,21 @@ const Search = observer(class Search extends Component {
                         notes: {boost: 1},
                       },
                       bool: 'OR',
-                      expand: true
+                      expand: true,
                     }).then(results => {
-                      // XXX need to filter this on unique texts (and notes?)
-                      console.log("Autocomplete search results:", results);
-                      this.setState({searchResults: results, searching: false})
+                      let hashes = new Set()
+                      let searchResults = []
+                      results.forEach(result => {
+                        let hash = result.text + result.notes
+                        if (!hashes.has(hash)) {
+                          searchResults.push(result)
+                          hashes.add(hash)
+                        }
+                      })
+                      this.setState({
+                        searchResults: searchResults,
+                        searching: false,
+                      })
                     })
                 }
               })
