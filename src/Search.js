@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import { observer } from 'mobx-react'
 
 import { DisplayDay } from './Day'
+import { debounce } from './Common'
 import store from './Store'
 
 
@@ -14,15 +15,46 @@ const Search = observer(class Search extends Component {
       searching: false,
       searchResults: null,
     }
+    this.autoCompleteSearch = debounce(this.autoCompleteSearch.bind(this), 300)
+  }
+
+  autoCompleteSearch() {
+    if (!this.state.search.trim().length) {
+      this.setState({
+        searchResults: [],
+        searching: false,
+      })
+    }
+    this.setState({searching: true})
+    this.props.searcher(this.state.search, {
+      fields: {
+        text: {boost: 3},
+        notes: {boost: 1},
+      },
+      bool: 'OR',
+      expand: true,
+    }).then(results => {
+      let hashes = new Set()
+      let searchResults = []
+      results.forEach(result => {
+        let hash = result.text + result.notes
+        if (!hashes.has(hash) && searchResults.length < 50) {
+          searchResults.push(result)
+          hashes.add(hash)
+        }
+      })
+      this.setState({
+        searchResults: searchResults,
+        searching: false,
+      })
+    })
   }
 
   render() {
 
-    const favorites = this.props.favorites || false
-
     return (
       <div className="search" style={{marginTop: 40}}>
-        <h3>{ favorites ? 'Favorites' : 'Search' }</h3>
+        <h3>Search</h3>
         <form onSubmit={e => {
           e.preventDefault()
           console.log('Form submitted!');
@@ -31,34 +63,7 @@ const Search = observer(class Search extends Component {
             type="search"
             className="form-control"
             onChange={e => {
-              this.setState({search: e.target.value}, () => {
-                if (!this.state.searching && this.state.search.length > 2) {
-                  // this.startSearchTimer = window.setTimeout(() => {
-                    this.setState({searching: true})
-                    this.props.searcher(this.state.search, {
-                      fields: {
-                        text: {boost: 3},
-                        notes: {boost: 1},
-                      },
-                      bool: 'OR',
-                      expand: true,
-                    }).then(results => {
-                      let hashes = new Set()
-                      let searchResults = []
-                      results.forEach(result => {
-                        let hash = result.text + result.notes
-                        if (!hashes.has(hash)) {
-                          searchResults.push(result)
-                          hashes.add(hash)
-                        }
-                      })
-                      this.setState({
-                        searchResults: searchResults,
-                        searching: false,
-                      })
-                    })
-                }
-              })
+              this.setState({search: e.target.value}, this.autoCompleteSearch)
             }}
             value={this.state.search}/>
             {' '}
@@ -88,7 +93,7 @@ const Search = observer(class Search extends Component {
           className="btn btn-primary btn-block"
           onClick={this.props.onClosePage}
           >
-          { favorites ? 'Close Favorites' : 'Close Search' }
+          Close Search
         </button>
       </div>
     )

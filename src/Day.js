@@ -3,7 +3,13 @@ import Highlighter from 'react-highlight-words'
 import dateFns from 'date-fns'
 import { observer } from 'mobx-react'
 
-import { makeDayId, makeWeekId, Heart, ShowWeekHeaderDates } from './Common'
+import {
+  makeDayId,
+  makeWeekId,
+  Heart,
+  ShowWeekHeaderDates,
+  debounce,
+ } from './Common'
 import store from './Store'
 
 
@@ -20,7 +26,7 @@ const Day = observer(class Day extends Component {
       searchResults: {},
     }
     this.saveChanges = this.saveChanges.bind(this)
-    this.autoCompleteSearch = this.autoCompleteSearch.bind(this)
+    this.autoCompleteSearch = debounce(this.autoCompleteSearch.bind(this), 300)
     this.toggleEditMode = this.toggleEditMode.bind(this)
     this.inputBlurred = this.inputBlurred.bind(this)
     this.inputFocused = this.inputFocused.bind(this)
@@ -81,7 +87,6 @@ const Day = observer(class Day extends Component {
       }
       return
     }
-    const { searcher } = this.props
     let searchResults = {}
     const searchConfig = {
       fields: {
@@ -93,9 +98,14 @@ const Day = observer(class Day extends Component {
       bool: 'AND',
       expand: true,
     }
-    searcher(text, searchConfig).then(results => {
-      searchResults[field] = results
-
+    this.props.searcher(text, searchConfig).then(results => {
+      let filteredResults = []
+      results.forEach(r => {
+        if (r.date !== this.props.day.date) {
+          filteredResults.push(r)
+        }
+      })
+      searchResults[field] = filteredResults
       this.setState({searchResults: searchResults})
     })
   }
@@ -138,7 +148,6 @@ const Day = observer(class Day extends Component {
                 onFocus={this.inputFocused}
                 onChange={e => {
                   this.setState({text: e.target.value, saved: false}, () => {
-                    // XXX debounch needed here
                     this.autoCompleteSearch(this.state.text, 'text')
                   })
                 }}

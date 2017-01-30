@@ -8,7 +8,7 @@ const getSchema = () => {
   .addColumn('datetime', lf.Type.DATE_TIME)
   .addColumn('text', lf.Type.STRING)
   .addColumn('notes', lf.Type.STRING)
-  .addColumn('starred', lf.Type.BOOL)
+  .addColumn('starred', lf.Type.BOOLEAN)
   .addPrimaryKey(['date'])
 
   return schema

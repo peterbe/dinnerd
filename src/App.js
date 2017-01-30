@@ -9,6 +9,7 @@ import getSchema from './Schema'
 import Nav from './Nav'
 import Days from './Days'
 import Settings from './Settings'
+import Favorites from './Favorites'
 import Search from './Search'
 import store from './Store'
 import { makeDayId } from './Common'
@@ -20,12 +21,12 @@ const App = observer(class App extends Component {
   constructor() {
     super()
 
-    let defaultPage = 'days'
-    if (document.location.hash.match(/^#page:(\w+)/)) {
-      defaultPage = document.location.hash.match(/^#page:(\w+)/)[1]
-    }
+    // let defaultPage = 'days'
+    // if (document.location.hash.match(/^#page:(\w+)/)) {
+    //   defaultPage = document.location.hash.match(/^#page:(\w+)/)[1]
+    // }
     this.state = {
-      page: defaultPage,
+      page: 'days',
     }
   }
 
@@ -35,42 +36,32 @@ const App = observer(class App extends Component {
 
   componentDidMount() {
     this.createDBConnection().then(() => {
-
-      if (this.state.page === 'starred') {
-        this.getFavorites().then(favorites => {
-          store.recentFavorites = favorites
-        })
-      } else {
-        this.loadInitialWeek().then(() => {
-          // Populate the index with ALL days
-          const searchIndexAsJson = localStorage.getItem('searchIndex')
-          if (searchIndexAsJson) {
-            // override this.searchIndex
-            this.searchIndex = elasticlunr.Index.load(
-              JSON.parse(searchIndexAsJson)
+      this.loadInitialWeek().then(() => {
+        // Populate the index with ALL days
+        const searchIndexAsJson = localStorage.getItem('searchIndex')
+        if (searchIndexAsJson) {
+          // override this.searchIndex
+          this.searchIndex = elasticlunr.Index.load(
+            JSON.parse(searchIndexAsJson)
+          )
+        } else {
+          // Set up the searchIndex before calling
+          // loadWeek() for the first time.
+          this.searchIndex = elasticlunr(function () {
+            this.addField('text')
+            this.addField('notes')
+            this.setRef('date')
+            // not store the original JSON document to reduce the index size
+            this.saveDocument(false)
+          })
+          this.populateWholeIndex().then(() => {
+            localStorage.setItem(
+              'searchIndex',
+              JSON.stringify(this.searchIndex)
             )
-          } else {
-            // Set up the searchIndex before calling loadWeek() for the first time
-            this.searchIndex = elasticlunr(function () {
-              this.addField('text')
-              this.addField('notes')
-              // this.addField('starred')
-              // this.addField('datetime')
-              this.setRef('date')
-
-              // not store the original JSON document to reduce the index size
-              this.saveDocument(false)
-              // this.saveDocument(true)  // XXX right?
-            })
-            this.populateWholeIndex().then(() => {
-              localStorage.setItem(
-                'searchIndex',
-                JSON.stringify(this.searchIndex)
-              )
-            })
-          }
-        })
-      }
+          })
+        }
+      })
     })
   }
 
@@ -108,26 +99,14 @@ const App = observer(class App extends Component {
         daysMap[day.date] = day
       })
       let days = store.days
-      // let days = []
       // by default assume we're going to PUSH days to the end of the list
-      //
       let future = false
       if (days.length) {
-      //   // console.log("DAYS:", days);
-      //   // console.log("DAYS[0]:", days[0]);
-      //   // console.log("DAYS[0]:", days[days.length - 1]);
-        // const firstDatetime = days[0].datetime
         const lastDatetime = days[days.length - 1].datetime
         if (firstDate > lastDatetime) {
           future = true
-      //     op = (...args) => days.unshift(...args)
         }
       }
-      //   console.log(firstDate, firstDatetime);
-      // }
-
-      // let dayNumbers = [0, 1, 3, 4, 5, 6]
-      // let op = (...args) => days.push(...args)
       let op = (...args) => days.unshift(...args)
       let dayNumbers = [6, 5, 4, 3, 2, 1, 0]
       if (future) {
@@ -135,7 +114,6 @@ const App = observer(class App extends Component {
         dayNumbers.reverse()
         op = (...args) => days.push(...args)
       }
-      // console.log("FUTURE?", future);
       dayNumbers.forEach(d => {
         let datetime = dateFns.addDays(firstDate, d)
         let date = dateFns.format(datetime, DATE_FORMAT)
@@ -151,9 +129,6 @@ const App = observer(class App extends Component {
           })
         }
       })
-      // console.log("About to sort", days.length, 'days');
-      // days.sort((a, b) => a.datetime - b.datetime)
-      // store.days = days
     })
   }
 
@@ -162,11 +137,13 @@ const App = observer(class App extends Component {
     return this.db.select().from(daysTable)
     .exec().then(results => {
       results.forEach(result => {
-        this.searchIndex.addDoc({
-          date: result.date,
-          text: result.text,
-          notes: result.notes,
-        })
+        if (result.text || result.notes) {
+          this.searchIndex.addDoc({
+            date: result.date,
+            text: result.text,
+            notes: result.notes,
+          })
+        }
       })
     })
   }
@@ -186,17 +163,21 @@ const App = observer(class App extends Component {
     day.notes = data.notes
     day.starred = data.starred
 
+    // update the search cache
+    if (this._searchCache && this._searchCache[day.date]) {
+      delete this._searchCache[day.date]
+    }
+
     return this.db.insertOrReplace().into(daysTable).values([row]).exec()
     .then(inserted => {
-      // console.log('INSERTED', inserted);
       inserted.forEach(day => {
-        this.searchIndex.addDoc({
-          date: day.date,
-          datetime: day.datetime,
-          text: day.text,
-          notes: day.notes,
-          starred: day.starred,
-        })
+        if (day.text || day.notes) {
+          this.searchIndex.addDoc({
+            date: day.date,
+            text: day.text,
+            notes: day.notes,
+          })
+        }
       })
       localStorage.setItem(
         'searchIndex',
@@ -208,11 +189,9 @@ const App = observer(class App extends Component {
 
   getFavorites() {
     const daysTable = this.db.getSchema().table('Days');
-    // THIS ISN'T WORKING :(
-    // https://groups.google.com/d/msg/lovefield-users/402QdlCvSKY/EXxA-b0nBwAJ
     return this.db.select().from(daysTable)
     .where(
-      daysTable.starred.eq('true')
+      daysTable.starred.eq(true)
     )
     .exec().then(results => {
       return results
@@ -220,41 +199,29 @@ const App = observer(class App extends Component {
   }
 
   searcher(text, searchConfig) {
-    // if (!(field === 'text' || field === 'notes')) {
-    //   throw new Error(`Unrecognized field ${field}`)
-    // }
     let found = this.searchIndex.search(
       text,
       searchConfig,
-      // {
-      //   fields: {
-      //     text: field === 'text' ? 1 : 0,
-      //     notes: field === 'notes' ? 1 : 0,
-      //   },
-      //   // Important otherwise the suggestions won't go away when
-      //   // start typing a lot more.
-      //   bool: 'AND',
-      //   expand: true,
-      // },
     )
     if (!found.length) {
       return Promise.resolve([])
     }
     if (!this._searchCache) {
-      this._searchCache = {}  // XXX should perhaps be a capped cache object
+      // If this starts getting too large and bloated,
+      // consider a LRU cache like
+      // https://github.com/rsms/js-lru
+      this._searchCache = {}
     }
     let refs = {}
     let cached = []
     found.forEach(f => {
       refs[f.ref] = f.score
-      // XXX this cache should be "purge" when days are edited and saved
       if (this._searchCache[f.ref]) {
         cached.push(this._searchCache[f.ref])
       }
     })
     if (found.length === cached.length) {
       // we had all of them cached!
-      console.log('hit lookup fully cached');
       return Promise.resolve(cached)
     }
     const daysTable = this.db.getSchema().table('Days')
@@ -273,7 +240,6 @@ const App = observer(class App extends Component {
     })
   }
 
-
   render() {
     let page = <p>Loading...</p>
 
@@ -289,7 +255,6 @@ const App = observer(class App extends Component {
       />
     } else if (this.state.page === 'search') {
       page = <Search
-        favorites={false}
         searcher={this.searcher.bind(this)}
         onClosePage={e => {
           this.setState({page: 'days'})
@@ -297,13 +262,13 @@ const App = observer(class App extends Component {
         }}
       />
     } else if (this.state.page === 'starred') {
-      page = <Search
-        favorites={true}
-        getFavorites={this.getFavorites.bind(this)}
-        searcher={this.searcher.bind(this)}
+      page = <Favorites
+        getFavorites={this.getFavorites}
         onClosePage={e => {
           this.setState({page: 'days'})
-          // this.loadInitialWeek()
+          if (!store.days.length) {
+            this.loadInitialWeek()
+          }
         }}
       />
     } else {
@@ -332,6 +297,10 @@ const App = observer(class App extends Component {
             this.setState({page: 'settings'})
           }}
           onGotoStarred={() => {
+            console.log('CALLING getFavorites()');
+            this.getFavorites().then(results => {
+              store.recentFavorites = results
+            })
             this.setState({page: 'starred'})
           }}
           onGotoSearch={() => {

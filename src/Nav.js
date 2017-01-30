@@ -47,7 +47,7 @@ const Nav = observer(class Nav extends Component {
         <a
           className="navbar-brand" href="#"
           onClick={e => {
-            // e.preventDefault()
+            e.preventDefault()
             this.props.onGotoWeek()
             // const id = makeDayId(store.firstDateThisWeek)
             // document.querySelector('#' + id).scrollIntoView()
@@ -70,7 +70,7 @@ const Nav = observer(class Nav extends Component {
                 className="nav-link"
                 href="#"
                 onClick={e => {
-                  // e.preventDefault()
+                  e.preventDefault()
                   // const id = makeDayId(store.firstDateThisWeek)
                   // document.querySelector('#' + id).scrollIntoView()
                   this.setState({collapsing: false, collapsed: true})
@@ -83,7 +83,7 @@ const Nav = observer(class Nav extends Component {
                 className="nav-link"
                 href="#page:settings"
                 onClick={e => {
-                  // e.preventDefault()
+                  e.preventDefault()
                   this.setState({collapsed: true})
                   this.props.onGotoSettings()
                 }}
@@ -94,7 +94,7 @@ const Nav = observer(class Nav extends Component {
                 className="nav-link"
                 href="#page:search"
                 onClick={e => {
-                  // e.preventDefault()
+                  e.preventDefault()
                   this.setState({collapsed: true})
                   this.props.onGotoSearch()
                 }}
@@ -107,7 +107,7 @@ const Nav = observer(class Nav extends Component {
                 className="nav-link"
                 href="#page:starred"
                 onClick={e => {
-                  // e.preventDefault()
+                  e.preventDefault()
                   this.setState({collapsed: true})
                   this.props.onGotoStarred()
                 }}
