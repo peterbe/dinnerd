@@ -287,17 +287,20 @@ const App = observer(class App extends Component {
     return (
       <div className="container">
         <Nav
-          onGotoWeek={() => {
+          onGotoWeek={(refresh = false) => {
             this.setState({page: 'days'}, () => {
               const id = makeDayId(store.firstDateThisWeek)
               document.querySelector('#' + id).scrollIntoView()
+              if (refresh) {
+                console.log('Calling loadInitialWeek');
+                this.loadInitialWeek()
+              }
             })
           }}
           onGotoSettings={() => {
             this.setState({page: 'settings'})
           }}
           onGotoStarred={() => {
-            console.log('CALLING getFavorites()');
             this.getFavorites().then(results => {
               store.recentFavorites = results
             })

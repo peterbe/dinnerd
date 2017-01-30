@@ -78,6 +78,22 @@ const Nav = observer(class Nav extends Component {
                 }}
                 >Go to <i>this</i> week</a>
             </li>
+            {
+              store.days.length && store.days.length !== 7 ?
+              <li className="nav-item">
+                <a
+                  className="nav-link"
+                  href="#"
+                  onClick={e => {
+                    e.preventDefault()
+                    this.setState({collapsing: false, collapsed: true})
+                    this.props.onGotoWeek(true)
+                  }}
+                  >Close all <i>other</i> weeks
+                </a>
+              </li>
+              : null
+            }
             <li className="nav-item">
               <a
                 className="nav-link"

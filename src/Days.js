@@ -3,7 +3,7 @@ import dateFns from 'date-fns'
 import { observer } from 'mobx-react'
 
 import store from './Store'
-import { makeWeekId } from './Common'
+import { makeDayId } from './Common'
 import Day from './Day'
 
 
@@ -13,9 +13,8 @@ const Days = observer(class Days extends Component {
     const firstDatetime = store.days[0].datetime
     const firstDatePreviousWeek = dateFns.subDays(firstDatetime, 7)
     this.props.loadWeek(firstDatePreviousWeek).then(() => {
-      const element = document.querySelector(
-        '#' + makeWeekId(firstDatePreviousWeek)
-      )
+      const id = makeDayId(firstDatePreviousWeek)
+      const element = document.querySelector('#' + id)
       if (element) {
         element.scrollIntoView({block: 'start', behavior: 'smooth'})
       }
@@ -27,9 +26,10 @@ const Days = observer(class Days extends Component {
     // console.log('lastDatetime', lastDatetime);
     const firstDateNextWeek = dateFns.addDays(lastDatetime, 1)
     this.props.loadWeek(firstDateNextWeek).then(() => {
-      const element = document.querySelector(
-        '#' + makeWeekId(firstDateNextWeek)
-      )
+      const id = makeDayId(firstDateNextWeek)
+      console.log("ID", id);
+      const element = document.querySelector('#' + id)
+      console.log("element", element);
       if (element) {
         element.scrollIntoView({block: 'start', behavior: 'smooth'})
       }
