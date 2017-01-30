@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import Highlighter from 'react-highlight-words'
 import dateFns from 'date-fns'
 import { observer } from 'mobx-react'
+import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
 
 import {
   makeDayId,
@@ -293,15 +294,22 @@ const Day = observer(class Day extends Component {
     }
 
     return (
-      <div className="day" id={makeDayId(day.datetime)}>
-        { firstDateThisWeek ? <ShowWeekHeader datetime={day.datetime}/> : null }
-        <h5 className="weekday-head">
-          {dateFns.format(day.datetime, 'dddd')}
-          {' '}
-          <ShowWeekdayHeadDate datetime={day.datetime}/>
-        </h5>
-        { display }
-      </div>
+      <ReactCSSTransitionGroup
+            transitionName="fadein"
+            transitionAppear={true}
+            transitionAppearTimeout={300}
+            transitionEnter={false}
+            transitionLeave={false}>
+        <div className="day" id={makeDayId(day.datetime)}>
+          { firstDateThisWeek ? <ShowWeekHeader datetime={day.datetime}/> : null }
+          <h5 className="weekday-head">
+            {dateFns.format(day.datetime, 'dddd')}
+            {' '}
+            <ShowWeekdayHeadDate datetime={day.datetime}/>
+          </h5>
+          { display }
+        </div>
+      </ReactCSSTransitionGroup>
     )
   }
 })

@@ -90,3 +90,28 @@ textarea.text {
 .search-results .search-result {
   margin: 20px 0;
 }
+
+
+.fadein-enter {
+  opacity: 0.01;
+}
+.fadein-enter.fadein-enter-active {
+  opacity: 1;
+  transition: opacity 500ms ease-in;
+}
+.fadein-leave {
+  opacity: 1;
+}
+.fadein-leave.fadein-leave-active {
+  opacity: 0.01;
+  transition: opacity 300ms ease-in;
+}
+
+
+.fadein-appear {
+  opacity: 0.01;
+}
+.fadein-appear.fadein-appear-active {
+  opacity: 1;
+  transition: opacity .5s ease-in;
+}
