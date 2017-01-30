@@ -23,13 +23,10 @@ const Days = observer(class Days extends Component {
 
   loadNextWeek(event) {
     const lastDatetime = store.days[store.days.length - 1].datetime
-    // console.log('lastDatetime', lastDatetime);
     const firstDateNextWeek = dateFns.addDays(lastDatetime, 1)
     this.props.loadWeek(firstDateNextWeek).then(() => {
       const id = makeDayId(firstDateNextWeek)
-      console.log("ID", id);
       const element = document.querySelector('#' + id)
-      console.log("element", element);
       if (element) {
         element.scrollIntoView({block: 'start', behavior: 'smooth'})
       }

@@ -131,7 +131,6 @@ const Day = observer(class Day extends Component {
   render() {
     let { day, firstDateThisWeek } = this.props
     let display
-    // console.log('store.copied:', store.copied);
     if (this.state.edit) {
       display = (
         <div className="container">

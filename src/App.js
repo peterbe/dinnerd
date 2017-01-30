@@ -292,7 +292,6 @@ const App = observer(class App extends Component {
               const id = makeDayId(store.firstDateThisWeek)
               document.querySelector('#' + id).scrollIntoView()
               if (refresh) {
-                console.log('Calling loadInitialWeek');
                 this.loadInitialWeek()
               }
             })

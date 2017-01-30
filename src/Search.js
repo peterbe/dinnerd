@@ -79,7 +79,13 @@ const Search = observer(class Search extends Component {
         { this.state.searching ? <i>Searching...</i> : null }
 
         {
-          !this.state.searching && this.state.searchResults ?
+          !this.state.searching && this.state.searchResults && !this.state.searchResults.length ?
+          <p>Nothing found.</p>
+          : null
+        }
+
+        {
+          !this.state.searching && this.state.searchResults && this.state.searchResults.length ?
           <ShowSearchResults
             results={this.state.searchResults}
             onClosePage={this.props.onClosePage}
