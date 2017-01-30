@@ -327,7 +327,12 @@ const ShowWeekdayHeadDate = ({ datetime }) => {
   } else if (dateFns.isTomorrow(datetime)) {
     text = 'Tomorrow'
   } else {
-    text = dateFns.distanceInWordsStrict(now, datetime, {addSuffix: true})
+    text = dateFns.distanceInWordsStrict(
+      dateFns.startOfDay(now),
+      datetime,
+      {addSuffix: true}
+    )
+
   }
 
   return (
