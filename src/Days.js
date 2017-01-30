@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import dateFns from 'date-fns'
 import { observer } from 'mobx-react'
+import zenscroll from 'zenscroll'
 
 import store from './Store'
 import { makeDayId } from './Common'
@@ -9,14 +10,23 @@ import Day from './Day'
 
 const Days = observer(class Days extends Component {
 
+  constructor(props) {
+    super(props)
+    this.state = {
+      loadingPreviousWeek: false,
+      loadingNextWeek: false,
+    }
+  }
+
   loadPreviousWeek(event) {
     const firstDatetime = store.days[0].datetime
     const firstDatePreviousWeek = dateFns.subDays(firstDatetime, 7)
     this.props.loadWeek(firstDatePreviousWeek).then(() => {
+      this.setState({loadingPreviousWeek: false})
       const id = makeDayId(firstDatePreviousWeek)
       const element = document.querySelector('#' + id)
       if (element) {
-        element.scrollIntoView({block: 'start', behavior: 'smooth'})
+        zenscroll.to(element)
       }
     })
   }
@@ -25,10 +35,11 @@ const Days = observer(class Days extends Component {
     const lastDatetime = store.days[store.days.length - 1].datetime
     const firstDateNextWeek = dateFns.addDays(lastDatetime, 1)
     this.props.loadWeek(firstDateNextWeek).then(() => {
+      this.setState({loadingNextWeek: false})
       const id = makeDayId(firstDateNextWeek)
       const element = document.querySelector('#' + id)
       if (element) {
-        element.scrollIntoView({block: 'start', behavior: 'smooth'})
+        zenscroll.to(element)
       }
     })
   }
@@ -43,6 +54,12 @@ const Days = observer(class Days extends Component {
             <button
               type="button"
               className="btn btn-primary btn-block"
+              onTouchStart={e => {
+                this.setState({loadingPreviousWeek: true})
+                setTimeout(() => {
+                  this.setState({loadingPreviousWeek: false})
+                }, 1000)
+              }}
               onClick={this.loadPreviousWeek.bind(this)}>
               Previous week
             </button>
@@ -73,8 +90,14 @@ const Days = observer(class Days extends Component {
             <button
               type="button"
               className="btn btn-primary btn-block"
+              onTouchStart={e => {
+                this.setState({loadingNextWeek: true})
+                setTimeout(() => {
+                  this.setState({loadingNextWeek: false})
+                }, 1000)
+              }}
               onClick={this.loadNextWeek.bind(this)}>
-              Next week
+              { this.state.loadingNextWeek ? 'Loading...' : 'Next week' }
             </button>
           </div>
           : null

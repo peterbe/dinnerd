@@ -1,7 +1,10 @@
 TODO
 ====
 
-* Upload burger logo on http://realfavicongenerator.net/
+* Figure how a way
+  1) encourage saving to Home screen on first run
+  2) if someone uses IndexedDB in safari and THEN later decide to add
+to Home screen, all data is lost.
 
 * https://zengabor.github.io/zenscroll/ seems to work on iOS safari
 
@@ -10,3 +13,5 @@ https://www.tinyprints.com/shop/custom-menus.htm
 
 DONE
 ====
+
+* Upload burger logo on http://realfavicongenerator.net/

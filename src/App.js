@@ -3,6 +3,7 @@ import dateFns from 'date-fns'
 import elasticlunr from 'elasticlunr'
 import lf from 'lovefield'
 import { observer } from 'mobx-react'
+import zenscroll from 'zenscroll'
 
 import './App.css'
 import getSchema from './Schema'
@@ -129,6 +130,7 @@ const App = observer(class App extends Component {
           })
         }
       })
+      return results
     })
   }
 
@@ -290,9 +292,15 @@ const App = observer(class App extends Component {
           onGotoWeek={(refresh = false) => {
             this.setState({page: 'days'}, () => {
               const id = makeDayId(store.firstDateThisWeek)
-              document.querySelector('#' + id).scrollIntoView()
+              const element = document.querySelector('#' + id)
               if (refresh) {
-                this.loadInitialWeek()
+                this.loadInitialWeek().then(() => {
+                  zenscroll.to(element)
+                })
+              } else {
+                setTimeout(() => {
+                  zenscroll.to(element)
+                }, 100)
               }
             })
           }}

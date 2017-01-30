@@ -49,8 +49,6 @@ const Nav = observer(class Nav extends Component {
           onClick={e => {
             e.preventDefault()
             this.props.onGotoWeek()
-            // const id = makeDayId(store.firstDateThisWeek)
-            // document.querySelector('#' + id).scrollIntoView()
           }}>
           Dinnerd
           {' '}
@@ -71,8 +69,6 @@ const Nav = observer(class Nav extends Component {
                 href="#"
                 onClick={e => {
                   e.preventDefault()
-                  // const id = makeDayId(store.firstDateThisWeek)
-                  // document.querySelector('#' + id).scrollIntoView()
                   this.setState({collapsing: false, collapsed: true})
                   this.props.onGotoWeek()
                 }}
@@ -89,7 +85,7 @@ const Nav = observer(class Nav extends Component {
                     this.setState({collapsing: false, collapsed: true})
                     this.props.onGotoWeek(true)
                   }}
-                  >Close all <i>other</i> weeks
+                  >Close all { store.days.length/7 } <i>other</i> weeks
                 </a>
               </li>
               : null

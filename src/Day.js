@@ -3,6 +3,7 @@ import Highlighter from 'react-highlight-words'
 import dateFns from 'date-fns'
 import { observer } from 'mobx-react'
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
+import zenscroll from 'zenscroll'
 
 import {
   makeDayId,
@@ -371,42 +372,14 @@ const ShowWeekHeader = ({ datetime }) => {
   return (
     <h3 className="week-head" id={id} onClick={e => {
       const id = makeDayId(datetime)
-      document.querySelector('#' + id).scrollIntoView()
+      const element = document.querySelector('#' + id)
+      zenscroll.to(element)
     }}>
       <ShowWeekHeaderDates
         start={datetime}
         end={dateFns.addDays(datetime, 6)}/>
-      {/* <button
-        type="button"
-        className="btn btn-primary btn-sm">Print</button> */}
     </h3>
   )
-  // return (
-  //   <div className="container week-head" id={id}>
-  //     <div className="row">
-  //       <div className="col-9">
-  //         <h3 className="" id={id} onClick={e => {
-  //           const id = makeDayId(datetime)
-  //           document.querySelector('#' + id).scrollIntoView()
-  //         }}>
-  //           <ShowWeekHeaderDates
-  //             start={datetime}
-  //             end={dateFns.addDays(datetime, 6)}/>
-  //
-  //         </h3>
-  //       </div>
-  //       <div className="col-3">
-  //         <button
-  //           type="button"
-  //           className="btn btn-primary btn-sm"
-  //           onClick={e => {
-  //             // might need to make sure all days are NOT in edit mode
-  //             window.print()
-  //           }}>Print</button>
-  //       </div>
-  //     </div>
-  //   </div>
-  // )
 }
 
 
