@@ -9,6 +9,9 @@ const getSchema = () => {
   .addColumn('text', lf.Type.STRING)
   .addColumn('notes', lf.Type.STRING)
   .addColumn('starred', lf.Type.BOOLEAN)
+  .addColumn('modified', lf.Type.DATE_TIME)
+  .addColumn('userCreated', lf.Type.STRING)
+  .addColumn('userModified', lf.Type.STRING)
   .addPrimaryKey(['date'])
 
   return schema
