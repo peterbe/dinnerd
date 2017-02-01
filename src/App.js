@@ -67,7 +67,10 @@ const App = observer(class App extends Component {
   }
 
   loadInitialWeek() {
+    // XXX this might inefficient. Perhaps better to
+    // use store.days.replace(days) inside loadWeek()
     store.days = []
+
     const weekStartsOnAMonday = store.settings.weekStartsOnAMonday || false
     store.firstDateThisWeek = dateFns.startOfWeek(
       new Date(), {weekStartsOn: weekStartsOnAMonday ? 1 : 0}
@@ -88,6 +91,7 @@ const App = observer(class App extends Component {
     let lastDate = dateFns.addDays(firstDate, 7)
     const daysTable = this.db.getSchema().table('Days');
     return this.db.select().from(daysTable)
+    .orderBy(daysTable.datetime, lf.Order.DESC)
     .where(
       lf.op.and(
         daysTable.datetime.gte(firstDate),
@@ -99,37 +103,71 @@ const App = observer(class App extends Component {
       results.forEach(day => {
         daysMap[day.date] = day
       })
-      let days = store.days
-      // by default assume we're going to PUSH days to the end of the list
-      let future = false
-      if (days.length) {
-        const lastDatetime = days[days.length - 1].datetime
-        if (firstDate > lastDatetime) {
-          future = true
-        }
-      }
-      let op = (...args) => days.unshift(...args)
-      let dayNumbers = [6, 5, 4, 3, 2, 1, 0]
-      if (future) {
-        // unshift in backwards
-        dayNumbers.reverse()
-        op = (...args) => days.push(...args)
-      }
+      // let dayNumbers = [6, 5, 4, 3, 2, 1, 0]
+      let dayNumbers = [0, 1, 2, 3, 4, 5, 6]
       dayNumbers.forEach(d => {
         let datetime = dateFns.addDays(firstDate, d)
         let date = dateFns.format(datetime, DATE_FORMAT)
+        // console.log('DATE', date);
         if (daysMap[date]) {
-          op(daysMap[date])
+          store.addDay(
+            date,
+            datetime,
+            daysMap[date].text,
+            daysMap[date].notes,
+            daysMap[date].starred,
+          )
         } else {
-          op({
-            date: date,
-            datetime: datetime,
-            text: '',
-            notes: '',
-            starred: false,
-          })
+          // create a blank one
+          store.addDay(date, datetime)
         }
       })
+      let sorted = store.days.sort((a, b) => {
+        return a.datetime - b.datetime
+        // if (a.datetime > b.datetime) {
+        //   return 1
+        // } else {
+        //   return -1
+        // }
+      })
+      store.days = sorted
+
+
+      // let daysMap = {}
+      // results.forEach(day => {
+      //   daysMap[day.date] = day
+      // })
+      // let days = store.days
+      // // by default assume we're going to PUSH days to the end of the list
+      // let future = false
+      // if (days.length) {
+      //   const lastDatetime = days[days.length - 1].datetime
+      //   if (firstDate > lastDatetime) {
+      //     future = true
+      //   }
+      // }
+      // let op = (...args) => days.unshift(...args)
+      // let dayNumbers = [6, 5, 4, 3, 2, 1, 0]
+      // if (future) {
+      //   // unshift in backwards
+      //   dayNumbers.reverse()
+      //   op = (...args) => days.push(...args)
+      // }
+      // dayNumbers.forEach(d => {
+      //   let datetime = dateFns.addDays(firstDate, d)
+      //   let date = dateFns.format(datetime, DATE_FORMAT)
+      //   if (daysMap[date]) {
+      //     op(daysMap[date])
+      //   } else {
+      //     op({
+      //       date: date,
+      //       datetime: datetime,
+      //       text: '',
+      //       notes: '',
+      //       starred: false,
+      //     })
+      //   }
+      // })
       return results
     })
   }
