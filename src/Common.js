@@ -47,3 +47,23 @@ export function debounce(callback, wait, context = this) {
     timeout = setTimeout(later, wait)
   }
 }
+
+
+export const ShowFirebaseError = ({ heading, error }) => {
+  if (!error) {
+    return null
+  }
+  return (
+    <div className="alert alert-danger" role="alert" style={{marginTop: 30}}>
+      <h4 className="alert-heading">{ heading }</h4>
+      <p>
+        <code>
+          { error.code }
+        </code>
+      </p>
+      <p className="mb-0">
+        { error.message }
+      </p>
+    </div>
+  )
+}

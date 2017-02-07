@@ -29,13 +29,14 @@ const Day = observer(class Day extends Component {
     }
     this.saveChanges = this.saveChanges.bind(this)
     this.autoCompleteSearch = debounce(this.autoCompleteSearch.bind(this), 300)
-    this.toggleEditMode = this.toggleEditMode.bind(this)
+    // this.toggleEditMode = this.toggleEditMode.bind(this)
     this.inputBlurred = this.inputBlurred.bind(this)
     this.inputFocused = this.inputFocused.bind(this)
   }
 
   componentDidMount() {
     let { day } = this.props
+    // console.log('this.props.DAY?', day.date, 'Text?', day.text);
     this.setState({
       text: day.text,
       notes: day.notes,
@@ -47,9 +48,9 @@ const Day = observer(class Day extends Component {
     })
   }
 
-  toggleEditMode() {
-    this.setState({edit: !this.state.edit})
-  }
+  // toggleEditMode() {
+  //   this.setState({edit: !this.state.edit})
+  // }
 
   saveChanges() {
     this.props.updateDay(this.props.day, {
@@ -100,21 +101,27 @@ const Day = observer(class Day extends Component {
       bool: 'AND',
       expand: true,
     }
-    this.props.searcher(text, searchConfig).then(results => {
-      let filteredResults = []
-      results.forEach(r => {
-        if (r.date !== this.props.day.date) {
-          filteredResults.push(r)
-        }
-      })
-      searchResults[field] = filteredResults
-      this.setState({searchResults: searchResults})
+    const results = this.props.searcher(text, searchConfig)
+    let filteredResults = []
+    results.forEach(r => {
+      if (r.date !== this.props.day.date) {
+        filteredResults.push(r)
+      }
     })
+    searchResults[field] = filteredResults
+    this.setState({searchResults: searchResults})
   }
 
   startEdit(focusOn = 'text') {
-    const hadText = !!this.state.text
-    this.setState({edit: true, hadText: hadText}, () => {
+    const { day } = this.props
+    // const hadText =
+    this.setState({
+      text: day.text,
+      notes: day.notes,
+      starred: day.starred,
+      edit: true,
+      hadText: !!this.state.text,
+    }, () => {
       const parentElement = document.querySelector(
         '#' + makeDayId(this.props.day.datetime)
       )
@@ -158,6 +165,9 @@ const Day = observer(class Day extends Component {
                 field="text"
                 results={this.state.searchResults.text}
                 picked={text => {
+                  if (this.closeEditSoon) {
+                    window.clearTimeout(this.closeEditSoon)
+                  }
                   this.setState({text: text, saved: false, searchResults: {}})
                 }}
               />
@@ -180,6 +190,9 @@ const Day = observer(class Day extends Component {
                 results={this.state.searchResults.notes}
                 field="notes"
                 picked={text => {
+                  if (this.closeEditSoon) {
+                    window.clearTimeout(this.closeEditSoon)
+                  }
                   this.setState({notes: text, saved: false, searchResults: {}})
                 }}
               />
@@ -285,9 +298,9 @@ const Day = observer(class Day extends Component {
     } else {
       // Regular display mode
       display = <DisplayDay
-        text={this.state.text}
-        notes={this.state.notes}
-        starred={this.state.starred}
+        text={day.text}
+        notes={day.notes}
+        starred={day.starred}
         fieldClicked={field => {
           this.startEdit(field)
         }}/>

@@ -19,10 +19,10 @@ const Days = observer(class Days extends Component {
   }
 
   loadPreviousWeek(event) {
-    const firstDatetime = store.days[0].datetime
+    const firstDatetime = store.dateRangeStart
     const firstDatePreviousWeek = dateFns.subDays(firstDatetime, 7)
-    this.props.loadWeek(firstDatePreviousWeek).then(() => {
-      this.setState({loadingPreviousWeek: false})
+    this.props.loadWeek(firstDatePreviousWeek)
+    this.setState({loadingPreviousWeek: false}, () => {
       const id = makeDayId(firstDatePreviousWeek)
       const element = document.querySelector('#' + id)
       if (element) {
@@ -32,10 +32,11 @@ const Days = observer(class Days extends Component {
   }
 
   loadNextWeek(event) {
-    const lastDatetime = store.days[store.days.length - 1].datetime
-    const firstDateNextWeek = dateFns.addDays(lastDatetime, 1)
-    this.props.loadWeek(firstDateNextWeek).then(() => {
-      this.setState({loadingNextWeek: false})
+    // const lastDatetime = store.days[store.days.length - 1].datetime
+    const firstDateNextWeek = store.dateRangeEnd
+    // const firstDateNextWeek = dateFns.addDays(lastDatetime, 1)
+    this.props.loadWeek(firstDateNextWeek)
+    this.setState({loadingNextWeek: false}, () => {
       const id = makeDayId(firstDateNextWeek)
       const element = document.querySelector('#' + id)
       if (element) {
@@ -49,7 +50,7 @@ const Days = observer(class Days extends Component {
     return (
       <div className="days">
         {
-          store.days.length ?
+          store.days.size ?
           <div className="options top">
             <button
               type="button"
@@ -67,10 +68,10 @@ const Days = observer(class Days extends Component {
           : null
         }
 
-        { !store.days.length ? <i>Loadings...</i> : null }
+        { !store.days.size ? <i>Loading...</i> : null }
 
         {
-          store.days.map(day => {
+          store.filteredDays.map(day => {
             let firstDateThisWeek = dateFns.isEqual(
               day.datetime,
               dateFns.startOfWeek(day.datetime, {weekStartsOn: weekStartsOn})
@@ -85,7 +86,7 @@ const Days = observer(class Days extends Component {
           })
         }
         {
-          store.days.length ?
+          store.days.size ?
           <div className="options bottom">
             <button
               type="button"

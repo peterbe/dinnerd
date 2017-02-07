@@ -115,3 +115,7 @@ textarea.text {
   opacity: 1;
   transition: opacity .5s ease-in;
 }
+
+.btn.close-button {
+  margin-top: 40px;
+}

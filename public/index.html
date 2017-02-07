@@ -50,5 +50,19 @@
       To begin the development, run `npm start`.
       To create a production bundle, use `npm run build`.
     -->
+
+    <!-- Make this smarter so it's configurable -->
+    <script src="https://www.gstatic.com/firebasejs/3.6.8/firebase.js"></script>
+    <script>
+      // Initialize Firebase
+      var config = {
+        apiKey: "AIzaSyAG0xEHwP1TrGSe6Jw0JmVWkSyhEDp-svw",
+        authDomain: "dinnerd-dev.firebaseapp.com",
+        databaseURL: "https://dinnerd-dev.firebaseio.com",
+        storageBucket: "dinnerd-dev.appspot.com",
+        messagingSenderId: "378499526474"
+      };
+      firebase.initializeApp(config);
+    </script>
   </body>
 </html>

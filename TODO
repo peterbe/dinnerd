@@ -6,12 +6,16 @@ TODO
   2) if someone uses IndexedDB in safari and THEN later decide to add
 to Home screen, all data is lost.
 
-* https://zengabor.github.io/zenscroll/ seems to work on iOS safari
-
 * Ideas for how to style print.css
 https://www.tinyprints.com/shop/custom-menus.htm
+
+* Consider js-search since it supports incrementally adding documents
+  apparently
+https://github.com/bvaughn/js-search/issues/20#issuecomment-277922936
 
 DONE
 ====
 
 * Upload burger logo on http://realfavicongenerator.net/
+
+* https://zengabor.github.io/zenscroll/ seems to work on iOS safari
