@@ -11,17 +11,44 @@
       "firebase.json",
       "database-rules.json",
       "storage.rules"
+    ],
+    "headers": [
+      {
+        "source": "/",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=86400"
+          }
+        ]
+      },
+      {
+        "source": "static/*.@(jpg|jpeg|gif|png|svg|css)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=8640000"
+          }
+        ]
+      },
+      {
+        "source": "static/favicons/*.*",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=8640000"
+          }
+        ]
+      },
+      {
+        "source": "static/**/main*.@(css|js)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000"
+          }
+        ]
+      }
     ]
-  },
-  "headers": [
-    {
-      "source" : "static/*.@(jpg|jpeg|gif|png|svg)",
-      "headers" : [
-        {
-          "key" : "Cache-Control",
-          "value" : "max-age=7200"
-        }
-      ]
-    }
-  ]
+  }
 }
