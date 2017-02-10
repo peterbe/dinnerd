@@ -58,6 +58,12 @@ const App = observer(class App extends Component {
       this.database = window.firebase.database()
     }
     this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this))
+
+    setTimeout(() => {
+      // window.addToHomescreen({debug: true})
+      window.addToHomescreen()
+    }, 3000)
+
   }
 
   onAuthStateChanged(user) {
