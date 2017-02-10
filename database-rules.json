@@ -1,0 +1,21 @@
+{
+  "rules": {
+    "groups": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$groupId": {
+        "days": {
+          ".indexOn": ["datetime"]
+        }
+      }
+    },
+    "group-codes": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "user-groups": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}

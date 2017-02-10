@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { observer } from 'mobx-react'
+import dateFns from 'date-fns'
 
 import { DisplayDay } from './Day'
 import store from './Store'
@@ -9,9 +10,15 @@ const Favorites = observer(class Favorites extends Component {
 
   render() {
 
+    // console.log('Rendering Favorites, store.recentFavorites:', store.recentFavorites);
+
     return (
       <div className="search" style={{marginTop: 40}}>
-        <h3>Favorites</h3>
+        <h4>
+          Favorites
+          {' '}
+          <small className="text-muted">(most recent first)</small>
+        </h4>
         { !store.recentFavorites ? <i>Loading...</i> : null }
 
         {
@@ -29,9 +36,8 @@ const Favorites = observer(class Favorites extends Component {
         }
 
         <button
-          style={{marginTop: 40}}
           type="button"
-          className="btn btn-primary btn-block"
+          className="btn btn-primary btn-block close-button"
           onClick={this.props.onClosePage}
           >
           Close Favorites
@@ -57,11 +63,18 @@ const ShowSearchResults = ({ results, onClosePage }) => {
                 <DisplayDay
                   text={result.text}
                   notes={result.notes}
-                  starred={result.starred}
+                  starred={false}
                   fieldClicked={e => {
                     // nothing
                   }}
                 />
+                <p className="last-used">
+                  Last used { dateFns.format(result.datetime, 'D MMM') },
+                  {' '}
+                  { dateFns.distanceInWordsStrict(
+                    new Date(), result.datetime, {addSuffix: true}
+                  ) }
+                </p>
               </div>
               <div className="col-3 action buttons"
                 style={{paddingTop: 5}}>

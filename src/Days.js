@@ -50,6 +50,14 @@ const Days = observer(class Days extends Component {
     return (
       <div className="days">
         {
+          !store.currentUser ?
+          <ShowUnauthorizedWarning
+            gotoSignInPage={this.props.gotoSignInPage}
+          />
+          : null
+        }
+
+        {
           store.days.size ?
           <div className="options top">
             <button
@@ -110,3 +118,26 @@ const Days = observer(class Days extends Component {
 
 
 export default Days
+
+
+const ShowUnauthorizedWarning = ({ gotoSignInPage }) => {
+  return (
+    <div className="alert alert-info" role="alert" style={{marginTop: 30}}>
+      <h4 className="alert-heading">Not Signed In</h4>
+      <p>
+        It's OK but nothing you enter will be backed up.
+      </p>
+      <p className="mb-0">
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={e => {
+            gotoSignInPage()
+          }}
+        >
+          Sign In
+        </button>
+      </p>
+    </div>
+  )
+}

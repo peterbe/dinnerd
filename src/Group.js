@@ -44,9 +44,7 @@ const Group = observer(class Group extends Component {
       .then(snapshot => {
         let codes = []
         snapshot.forEach(child => {
-          // console.log('CHILD', child.val());
           let childData = child.val()
-
           if (childData.group === store.settings.defaultGroupId) {
             codes.push(childData.code)
           }
@@ -54,8 +52,6 @@ const Group = observer(class Group extends Component {
         if (codes.length) {
           this.setState({codes: codes})
         }
-        // console.log('Snapshot', snapshot.val());
-        // this.setState({codes: snapshot.val()})
       })
     }
   }
@@ -66,21 +62,19 @@ const Group = observer(class Group extends Component {
       database.ref('/user-groups/' + store.currentUser.uid)
       .once('value')
       .then(snapshot => {
-        // console.log('snapshot', snapshot.val());
-        // this.setState({codes: snapshot.val()})
         let otherGroups = []
         snapshot.forEach(function(child) {
-          // var childKey = child.key;
           var childData = child.val()
-          if (!store.settings.defaultGroupId || childData.group !== store.settings.defaultGroupId) {
+          if (
+            !store.settings.defaultGroupId ||
+            childData.group !== store.settings.defaultGroupId
+          ) {
             otherGroups.push({
               id: childData.group,
               name: childData.name,
               membership: childData.membership,
             })
           }
-          // console.log("KEY", childKey, "DATA", childData)
-          // ...
         })
         if (otherGroups.length) {
           if (!store.currentGroup && otherGroups.length === 1) {
@@ -97,7 +91,7 @@ const Group = observer(class Group extends Component {
   render() {
     return (
       <div className="user" style={{marginTop: 40}}>
-        <h3>Family/Group</h3>
+        <h3>Group</h3>
 
         <p>
           Everything you save has to belong to a group. <br/>
@@ -106,7 +100,7 @@ const Group = observer(class Group extends Component {
 
         {
           store.currentGroup ?
-          <h4>You're currently in the <i>{ store.currentGroup.name }</i> group/family.</h4>
+          <h5>You're currently in the <i>{ store.currentGroup.name }</i> group.</h5>
           : null
         }
 
@@ -245,7 +239,7 @@ class JoinCreateGroup extends Component {
             this.createError = error
           })
         }}>
-          <h4>Create New Group/Family</h4>
+          <h5>Create New Group</h5>
 
           <div
             className={this.state.createError ? 'form-group has-danger': 'form-group'}>
@@ -280,7 +274,7 @@ class JoinCreateGroup extends Component {
 
 
         }}>
-          <h4>Join Group/Family</h4>
+          <h5>Join Group</h5>
           <div
             className={this.state.joinError ? 'form-group has-danger': 'form-group'}>
             <input
@@ -451,7 +445,7 @@ class JoinOtherGroup extends Component {
 const ManageGroupCodes = ({ codes }) => {
   return (
     <div className="group-codes">
-      <h5>To invite others into this group, give them one of these codes:</h5>
+      <p>To invite others into this group, give them one of these codes:</p>
       <ul>
         {
           codes.map(code => {

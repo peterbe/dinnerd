@@ -29,14 +29,12 @@ const Day = observer(class Day extends Component {
     }
     this.saveChanges = this.saveChanges.bind(this)
     this.autoCompleteSearch = debounce(this.autoCompleteSearch.bind(this), 300)
-    // this.toggleEditMode = this.toggleEditMode.bind(this)
     this.inputBlurred = this.inputBlurred.bind(this)
     this.inputFocused = this.inputFocused.bind(this)
   }
 
   componentDidMount() {
     let { day } = this.props
-    // console.log('this.props.DAY?', day.date, 'Text?', day.text);
     this.setState({
       text: day.text,
       notes: day.notes,
@@ -44,13 +42,8 @@ const Day = observer(class Day extends Component {
       saved: true,
       hadText: false,
       saving: false,
-      // searchResults: [],
     })
   }
-
-  // toggleEditMode() {
-  //   this.setState({edit: !this.state.edit})
-  // }
 
   saveChanges() {
     this.props.updateDay(this.props.day, {
@@ -102,6 +95,7 @@ const Day = observer(class Day extends Component {
       expand: true,
     }
     const results = this.props.searcher(text, searchConfig)
+    // console.log("RESULTS FROM SEARCH", results);
     let filteredResults = []
     results.forEach(r => {
       if (r.date !== this.props.day.date) {
@@ -147,58 +141,57 @@ const Day = observer(class Day extends Component {
             e.preventDefault()
             console.log("FOrm submitted!");
           }}>
-          <div className="textareas">
-            <div className="textarea">
-              <textarea
-                className="text form-control"
-                placeholder="Text..."
-                onBlur={this.inputBlurred}
-                onFocus={this.inputFocused}
-                onChange={e => {
-                  this.setState({text: e.target.value, saved: false}, () => {
-                    this.autoCompleteSearch(this.state.text, 'text')
-                  })
-                }}
-                value={this.state.text}></textarea>
-              <ShowTextAutocomplete
-                text={this.state.text}
-                field="text"
-                results={this.state.searchResults.text}
-                picked={text => {
-                  if (this.closeEditSoon) {
-                    window.clearTimeout(this.closeEditSoon)
-                  }
-                  this.setState({text: text, saved: false, searchResults: {}})
-                }}
-              />
+            <div className="textareas">
+              <div className="textarea">
+                <textarea
+                  className="text form-control"
+                  placeholder="Text..."
+                  onBlur={this.inputBlurred}
+                  onFocus={this.inputFocused}
+                  onChange={e => {
+                    this.setState({text: e.target.value, saved: false}, () => {
+                      this.autoCompleteSearch(this.state.text, 'text')
+                    })
+                  }}
+                  value={this.state.text}></textarea>
+                <ShowTextAutocomplete
+                  text={this.state.text}
+                  field="text"
+                  results={this.state.searchResults.text}
+                  picked={text => {
+                    if (this.closeEditSoon) {
+                      window.clearTimeout(this.closeEditSoon)
+                    }
+                    this.setState({text: text, saved: false, searchResults: {}})
+                  }}
+                />
 
+              </div>
+              <div className="textarea">
+                <textarea
+                  className="notes form-control"
+                  placeholder="Notes..."
+                  onBlur={this.inputBlurred}
+                  onFocus={this.inputFocused}
+                  onChange={e => {
+                    this.setState({notes: e.target.value, saved: false}, () => {
+                      this.autoCompleteSearch(this.state.notes, 'notes')
+                    })
+                  }}
+                  value={this.state.notes}></textarea>
+                <ShowTextAutocomplete
+                  text={this.state.notes}
+                  results={this.state.searchResults.notes}
+                  field="notes"
+                  picked={text => {
+                    if (this.closeEditSoon) {
+                      window.clearTimeout(this.closeEditSoon)
+                    }
+                    this.setState({notes: text, saved: false, searchResults: {}})
+                  }}
+                />
+              </div>
             </div>
-            <div className="textarea">
-              <textarea
-                className="notes form-control"
-                placeholder="Notes..."
-                onBlur={this.inputBlurred}
-                onFocus={this.inputFocused}
-                onChange={e => {
-                  this.setState({notes: e.target.value, saved: false}, () => {
-                    this.autoCompleteSearch(this.state.notes, 'notes')
-                  })
-                }}
-                value={this.state.notes}></textarea>
-              <ShowTextAutocomplete
-                text={this.state.notes}
-                results={this.state.searchResults.notes}
-                field="notes"
-                picked={text => {
-                  if (this.closeEditSoon) {
-                    window.clearTimeout(this.closeEditSoon)
-                  }
-                  this.setState({notes: text, saved: false, searchResults: {}})
-                }}
-              />
-            </div>
-
-          </div>
           </form>
           <div className="actions row">
             <div className="action starred col-4">

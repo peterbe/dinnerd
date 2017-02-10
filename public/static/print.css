@@ -8,6 +8,7 @@ body, h2, h3, h4, h5 {
 }
 
 
+.App-header,
 div.options,
 nav {
   display: none !important;
@@ -16,4 +17,8 @@ nav {
 .day {
   padding-top: 30px !important;
   border-top: none !important;
+}
+
+.page-container {
+  margin-top: 0 !important;
 }

@@ -1,6 +1,11 @@
 TODO
 ====
 
+* Ability to upload and store pictures.
+http://stackoverflow.com/a/31501426/205832
+
+* Consider using runInAction() when updating the store with multiple things.
+
 * Figure how a way
   1) encourage saving to Home screen on first run
   2) if someone uses IndexedDB in safari and THEN later decide to add

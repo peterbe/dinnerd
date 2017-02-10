@@ -6,7 +6,6 @@ import { observer } from 'mobx-react'
 import zenscroll from 'zenscroll'
 
 import './App.css'
-// import getSchema from './Schema'
 import Nav from './Nav'
 import Days from './Days'
 import Settings from './Settings'
@@ -24,25 +23,42 @@ const DATE_FORMAT = 'YYYY-MM-DD'
 // string to Date object
 const decodeDatetime = (dateStr) => dateFns.parse(dateStr)
 // Date object to string
-const encodeDatetime = (dateObj) => dateFns.format(dateObj)
+const encodeDatetime = (dateObj) => dateFns.getTime(dateObj)
 
+console.log(process.env.REACT_APP_DEV);
+if (process.env.REACT_APP_DEV) {
+  store.dev = true
+  document.title = 'Dev ' + document.title
+}
 
 const App = observer(class App extends Component {
   constructor() {
     super()
 
-    // let defaultPage = 'days'
-    // if (document.location.hash.match(/^#page:(\w+)/)) {
-    //   defaultPage = document.location.hash.match(/^#page:(\w+)/)[1]
-    // }
     this.state = {
       page: 'days',
     }
 
-    this.auth = window.firebase.auth()
-    this.database = window.firebase.database()
+    if (typeof window.firebase === 'undefined') {
+      store.noFirebase = true
+      this.database = this.auth = null
+    } else {
+      // Initialize Firebase
+      const config = {
+        apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+        authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+        databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
+        storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+        messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+      }
+      window.firebase.initializeApp(config)
+      this.auth = window.firebase.auth()
+      if (process.env.REACT_APP_FIREBASE_LOGGING === 'true') {
+        window.firebase.database.enableLogging(true)
+      }
+      this.database = window.firebase.database()
+    }
     this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this))
-    // this.currentUser = null
   }
 
   onAuthStateChanged(user) {
@@ -50,29 +66,12 @@ const App = observer(class App extends Component {
       // User is signed in!
       // let profilePicUrl = user.photoURL
       // let userName = user.displayName
-      // console.log(user);
-      // console.log(user.email);
-      // this.currentUser = user
       store.currentUser = user
-      // store.currentUser = {
-      //   // displayName: user.displayName,
-      //   email: user.email,
-      //   emailVerified: user.emailVerified,
-      // }
-      // if (!user.emailVerified) {
-      //
-      // }
-      // Figure out which group the user belongs to,
-      // then load all days from that!
-      // And...
-
       // If you're signed in, let's set what you're current group is
       if (!store.currentGroup && store.settings.defaultGroupId) {
         this.database.ref('/groups/' + store.settings.defaultGroupId)
         .once('value')
         .then(snapshot => {
-          // console.log('SNAPSHOT', snapshot);
-          // console.log('SNAPSHOT.val', snapshot.val());
           if (snapshot.val()) {
             store.currentGroup = {
               id: store.settings.defaultGroupId,
@@ -87,43 +86,64 @@ const App = observer(class App extends Component {
         // console.warn('Figure out which is your default group!');
         this.setState({page: 'group'})
       }
-      // this.database.ref('/groups/' + userId).once('value').then(function(snapshot) {
-      //   var username = snapshot.val().username;
-      //   // ...
-      // });
-
     } else {
       // User is signed out!
       console.log('No user', 'Signed out?');
       store.currentUser = null
-      // this.currentUser = null
     }
   }
 
-  // isUserSignedIn() {
-  //   return this.auth.currentUser
-  // }
-  //
-  // getCurrentUser() {
-  //   return this.auth.currentUser
-  // }
-
-  // componentWillMount() {
-  //   this.schemaBuilder = getSchema()
-  // }
-
   componentDidMount() {
+    if (this.database) {
+      this.database.ref('.info/connected')
+      .on('value', snapshot => {
+        if (snapshot.val()) { // Yay! Connected!
+          if (this.setOfflineTimeout) {
+            window.clearTimeout(this.setOfflineTimeout)
+          }
+          this.triggerNotOffline()
+        } else {
+          if (store.offline === null) {
+            // It it hasn't been set yet, give it some time to do so
+            this.setOfflineTimeout = window.setTimeout(() => {
+              this.triggerOffline()
+            }, 2000);
+          } else {
+            this.triggerOffline()
+          }
+        }
+      })
+    }
 
     this.loadInitialWeek()
 
     if (store.settings.defaultGroupId) {
-      this.listenOnDayRefs()
+      // this.listenOnDayRefs()
 
       const searchIndexAsJson = localStorage.getItem('searchIndex')
-      if (searchIndexAsJson) {
+      const searchDataAsJson = localStorage.getItem('searchData')
+      if (searchIndexAsJson && searchDataAsJson) {
         this.searchIndex = elasticlunr.Index.load(
           JSON.parse(searchIndexAsJson)
         )
+        this.searchData = JSON.parse(searchDataAsJson)
+
+        // Offline or not, fill in as many days as we can from
+        // the localStorage snapshot.
+        const dayDates = Object.keys(this.searchData)
+        if (dayDates.length) {
+          dayDates.forEach(date => {
+            let data = this.searchData[date]
+            store.addDay(
+              date,
+              decodeDatetime(data.datetime),
+              data.text,
+              data.notes,
+              data.starred
+            )
+          })
+        }
+
       } else {
         this.searchIndex = elasticlunr(function () {
           this.addField('text')
@@ -132,44 +152,40 @@ const App = observer(class App extends Component {
           // not store the original JSON document to reduce the index size
           this.saveDocument(false)
         })
+        this.searchData = {}
         this.loadSearchIndex()
       }
     }
+  }
 
-    // this.createDBConnection().then(() => {
-    //   this.loadInitialWeek().then(() => {
-    //     // Populate the index with ALL days
-    //     const searchIndexAsJson = localStorage.getItem('searchIndex')
-    //     if (searchIndexAsJson) {
-    //       // override this.searchIndex
-    //       this.searchIndex = elasticlunr.Index.load(
-    //         JSON.parse(searchIndexAsJson)
-    //       )
-    //     } else {
-    //       // Set up the searchIndex before calling
-    //       // loadWeek() for the first time.
-    //       this.searchIndex = elasticlunr(function () {
-    //         this.addField('text')
-    //         this.addField('notes')
-    //         this.setRef('date')
-    //         // not store the original JSON document to reduce the index size
-    //         this.saveDocument(false)
-    //       })
-    //       this.populateWholeIndex().then(() => {
-    //         localStorage.setItem(
-    //           'searchIndex',
-    //           JSON.stringify(this.searchIndex)
-    //         )
-    //       })
-    //     }
-    //   })
-    // })
+  triggerNotOffline() {
+    store.offline = false
+  }
+
+  triggerOffline() {
+    store.offline = true
   }
 
   listenOnDayRefs() {
+    if (!store.dateRangeStart) {
+      throw new Error('store.dateRangeStart not set')
+    }
+    if (!store.dateRangeEnd) {
+      throw new Error('store.dateRangeEnd not set')
+    }
+    // console.log('Listening to days between',
+    //   [encodeDatetime(store.dateRangeStart), encodeDatetime(store.dateRangeEnd)]
+    // );
+    if (this.daysRef) {
+      this.daysRef.off()
+    }
     this.daysRef = this.database.ref(
       'groups/' + store.settings.defaultGroupId + '/days'
     )
+    .orderByChild('datetime')
+    .startAt(encodeDatetime(store.dateRangeStart))
+    .endAt(encodeDatetime(store.dateRangeEnd))
+
     this.daysRef.on('child_added', child => {
       const data = child.val()
       // console.log('DAY ADDED!', child.key, data);
@@ -180,11 +196,20 @@ const App = observer(class App extends Component {
         data.notes,
         data.starred
       )
+      if (this.differentSearchData(child.key, data)) {
+        this.searchData[child.key] = {
+          date: child.key,
+          datetime: data.datetime,
+          text: data.text,
+          notes: data.notes,
+          starred: data.starred,
+        }
+        localStorage.setItem('searchData', JSON.stringify(this.searchData))
+      }
     })
     this.daysRef.on('child_changed', child => {
-      // console.log('DAY CHANGED!', child.key, child.val());
+      console.log('DAY CHANGED!', child.key, child.val());
       const data = child.val()
-      // console.log('DAY CHANGED!', child.key, data);
       store.addDay(
         child.key,
         decodeDatetime(data.datetime),
@@ -192,29 +217,60 @@ const App = observer(class App extends Component {
         data.notes,
         data.starred
       )
+      if (this.differentSearchData(child.key, data)) {
+        this.searchData[child.key] = {
+          date: child.key,
+          datetime: data.datetime,
+          text: data.text,
+          notes: data.notes,
+          starred: data.starred,
+        }
+        localStorage.setItem('searchData', JSON.stringify(this.searchData))
+      }
     })
+  }
+
+  differentSearchData(date, data) {
+    // compare 'data' with 'this.searchData[date]' and if any of them is
+    // different return true.
+    let differentKeys = Object.keys(data).filter(key => {
+      return data[key] !== this.searchData[date][key]
+    })
+    return !!differentKeys.length
   }
 
   loadSearchIndex() {
     if (this._searchCache) {
       this._searchCache = {}
     }
-    this.daysRef.once('value', snapshot => {
+    this.database.ref(
+      'groups/' + store.settings.defaultGroupId + '/days'
+    )
+    .once('value', snapshot => {
       snapshot.forEach(child => {
         const data = child.val()
-        // console.log('CHILD', child.key, child.val());
-        // THIS MAYBE?
         if (data.text || data.notes) {
           this.searchIndex.addDoc({
             date: child.key,
             text: data.text,
             notes: data.notes,
           })
+          this.searchData[child.key] = {
+            date: child.key,
+            datetime: data.datetime,
+            text: data.text,
+            notes: data.notes,
+            starred: data.starred,
+          }
         }
       })
       localStorage.setItem(
         'searchIndex',
         JSON.stringify(this.searchIndex)
+      )
+      localStorage.setItem(
+        'searchData',
+        JSON.stringify(this.searchData)
       )
     })
   }
@@ -231,12 +287,8 @@ const App = observer(class App extends Component {
     if (!firstDate || typeof firstDate !== 'object') {
       throw new Error("Expect 'firstDate' to be a date object")
     }
-    // console.log('HERE IN loadWeek', firstDate);
-    // let daysMap = {}
     let lastDate = dateFns.addDays(firstDate, 7)
     store.extendDateRange(firstDate, lastDate)
-
-    // XXX look into mobx.transaction https://jsfiddle.net/rubyred/o5se1urx/
     let dayNumbers = [0, 1, 2, 3, 4, 5, 6]
     dayNumbers.forEach(d => {
       let datetime = dateFns.addDays(firstDate, d)
@@ -246,6 +298,7 @@ const App = observer(class App extends Component {
         store.addDay(date, datetime)
       }
     })
+    this.listenOnDayRefs()
   }
 
   updateDay(day, data) {
@@ -262,6 +315,20 @@ const App = observer(class App extends Component {
     const dayRef = this.database.ref(
       'groups/' + store.settings.defaultGroupId + '/days/' + day.date
     )
+    this.searchIndex.addDoc({
+      date: day.date,
+      text: data.text,
+      notes: data.notes,
+    })
+    localStorage.setItem('searchIndex', JSON.stringify(this.searchIndex))
+    this.searchData[day.date] = {
+      date: day.date,
+      text: data.text,
+      notes: data.notes,
+      starred: data.starred,
+    }
+    localStorage.setItem('searchData', JSON.stringify(this.searchData))
+
     return dayRef.set({
       date: day.date,  // XXX is hit nsecessary?
       datetime: encodeDatetime(day.datetime),
@@ -269,45 +336,42 @@ const App = observer(class App extends Component {
       notes: data.notes,
       starred: data.starred,
     })
-    // XXX ALso need to this.searchIndex.addDoc(...)
-    //...
-    // and run...
-    // localStorage.setItem(
-    //   'searchIndex',
-    //   JSON.stringify(this.searchIndex)
-    // )
-
-    // return this.db.insertOrReplace().into(daysTable).values([row]).exec()
-    // .then(inserted => {
-    //   inserted.forEach(day => {
-    //     if (day.text || day.notes) {
-    //       this.searchIndex.addDoc({
-    //         date: day.date,
-    //         text: day.text,
-    //         notes: day.notes,
-    //       })
-    //     }
-    //   })
-    //   localStorage.setItem(
-    //     'searchIndex',
-    //     JSON.stringify(this.searchIndex)
-    //   )
-    //   return inserted
-    // })
   }
 
   getFavorites() {
-    const daysTable = this.db.getSchema().table('Days');
-    return this.db.select().from(daysTable)
-    .where(
-      daysTable.starred.eq(true)
+    return this.database.ref(
+      'groups/' + store.settings.defaultGroupId + '/days'
     )
-    .exec().then(results => {
+    .orderByChild('starred')
+    .equalTo(true)
+    .once('value')
+    .then(snapshot => {
+      let results = []
+      // Strange, snapshot has a .forEach but no .map or .filter
+      snapshot.forEach(child => {
+        results.push(child.val())
+      })
+      results.sort((a, b) => {
+        return b.datetime - a.datetime
+      })
+      let hashes = new Set()
+      results = results.filter(result => {
+        let hash = result.text + result.notes
+        hash = hash.toLowerCase()
+        if (!hashes.has(hash)) {
+          hashes.add(hash)
+          return true
+        }
+        return false
+      })
       return results
     })
   }
 
   searcher(text, searchConfig) {
+    if (!text.trim()) {
+      throw new Error('Empty search')
+    }
     let found = this.searchIndex.search(
       text,
       searchConfig,
@@ -333,11 +397,30 @@ const App = observer(class App extends Component {
       // we had all of them cached!
       return cached
     }
-
-    let days = found.map(result => result.ref)
-    return store.days.values().filter(day => {
-      return days.includes(day.date)
+    let uniqueTexts = new Set()
+    let key = 'text'
+    if (searchConfig.fields.notes) {
+        key = 'notes'
+    }
+    return found.map(result => {
+      return this.searchData[result.ref]
+    }).filter(result => {
+      let hash = result[key].toLowerCase()
+      if (!uniqueTexts.has(hash)) {
+        uniqueTexts.add(hash)
+        return true
+      }
+      return false
     })
+    // return store.days.values().filter(day => {
+    //   if (days.includes(day.date)) {
+    //     if (day[key] && !uniqueTexts.has(day[key])) {
+    //       uniqueTexts.add(day[key])
+    //       return true
+    //     }
+    //   }
+    //   return false
+    // })
   }
 
   render() {
@@ -440,6 +523,9 @@ const App = observer(class App extends Component {
         searcher={this.searcher.bind(this)}
         loadWeek={this.loadWeek.bind(this)}
         updateDay={this.updateDay.bind(this)}
+        gotoSignInPage={() => {
+          this.setState({page: 'signin'})
+        }}
         // firstDateThisWeek={store.firstDateThisWeek}
       />
     }
@@ -474,6 +560,7 @@ const App = observer(class App extends Component {
           }}
           onGotoStarred={() => {
             this.getFavorites().then(results => {
+              // console.log('FAVORITES RESULT:', results);
               store.recentFavorites = results
             })
             this.setState({page: 'starred'})
@@ -481,15 +568,40 @@ const App = observer(class App extends Component {
           onGotoSearch={() => {
             this.setState({page: 'search'})
           }}
-
         />
-        <div className="App-header">
-          <h2>Hi! Waldo here!</h2>
+        <div className="page-container" style={{marginTop: 60}}>
+          <ShowOfflineWarning offline={store.offline}/>
+          { page }
         </div>
-        { page }
       </div>
     );
   }
 })
 
 export default App
+
+
+const ShowOfflineWarning = ({ offline }) => {
+  if (offline !== true) {
+    return null
+  }
+  return (
+    <div className="alert alert-danger" role="alert" style={{marginTop: 30}}>
+      <h4 className="alert-heading">Offline!</h4>
+      <p>
+        Seems you are offline :(
+      </p>
+      <p className="mb-0">
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={e => {
+            window.location.reload()
+          }}
+        >
+          Try Reloading
+        </button>
+      </p>
+    </div>
+  )
+}

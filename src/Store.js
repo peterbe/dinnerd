@@ -17,6 +17,9 @@ class Day {
 class Store {
   constructor() {
     extendObservable(this, {
+      noFirebase: false,
+      offline: null,  // null == "Don't really know"
+      // wasOffline: false,
       currentUser: null,
       days: new ObservableMap(),
       copied: null,
@@ -45,7 +48,6 @@ class Store {
         }
       },
       get filteredDays() {
-        // return this.days.values()
         return this.days.values().filter(day => {
           if (this.dateRangeStart) {
             if (day.datetime >= this.dateRangeStart && day.datetime < this.dateRangeEnd) {

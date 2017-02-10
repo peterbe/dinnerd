@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import { observer } from 'mobx-react'
+import dateFns from 'date-fns'
 
 import { DisplayDay } from './Day'
 import { debounce } from './Common'
@@ -24,29 +25,30 @@ const Search = observer(class Search extends Component {
         searchResults: [],
         searching: false,
       })
+      return
     }
     this.setState({searching: true})
-    this.props.searcher(this.state.search, {
+    const results = this.props.searcher(this.state.search, {
       fields: {
         text: {boost: 3},
         notes: {boost: 1},
       },
       bool: 'OR',
       expand: true,
-    }).then(results => {
-      let hashes = new Set()
-      let searchResults = []
-      results.forEach(result => {
-        let hash = result.text + result.notes
-        if (!hashes.has(hash) && searchResults.length < 50) {
-          searchResults.push(result)
-          hashes.add(hash)
-        }
-      })
-      this.setState({
-        searchResults: searchResults,
-        searching: false,
-      })
+    })
+    let hashes = new Set()
+    let searchResults = []
+    results.forEach(result => {
+      let hash = result.text + result.notes
+      hash = hash.toLowerCase()
+      if (!hashes.has(hash) && searchResults.length < 50) {
+        searchResults.push(result)
+        hashes.add(hash)
+      }
+    })
+    this.setState({
+      searchResults: searchResults,
+      searching: false,
     })
   }
 
@@ -127,6 +129,13 @@ const ShowSearchResults = ({ results, onClosePage }) => {
                     // nothing
                   }}
                 />
+                <p className="last-used">
+                  Last used { dateFns.format(result.datetime, 'D MMM') },
+                  {' '}
+                  { dateFns.distanceInWordsStrict(
+                    new Date(), result.datetime, {addSuffix: true}
+                  ) }
+                </p>
               </div>
               <div className="col-3 action buttons"
                 style={{paddingTop: 5}}>
@@ -151,5 +160,4 @@ const ShowSearchResults = ({ results, onClosePage }) => {
       }
     </div>
   )
-
 }

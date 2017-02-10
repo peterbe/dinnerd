@@ -60,9 +60,42 @@ const Nav = observer(class Nav extends Component {
             /> :
             null
           }
+          {' '}
+          <ShowOfflineIndicator offline={store.offline}/>
         </a>
         <div className={navlinksClassname} id="navbarNav">
           <ul className="navbar-nav">
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                href="#page:search"
+                onClick={e => {
+                  e.preventDefault()
+                  this.setState({collapsed: true})
+                  this.props.onGotoSearch()
+                }}
+                >
+                  Search
+                </a>
+            </li>
+            <li className="nav-item">
+              <a
+                className="nav-link"
+                href="#page:starred"
+                onClick={e => {
+                  e.preventDefault()
+                  this.setState({collapsed: true})
+                  this.props.onGotoStarred()
+                }}
+                >
+                  <Heart
+                    filled={true}
+                    bubble={e => {
+                    }}
+                  />
+                  Favorites
+                </a>
+            </li>
             <li className="nav-item">
               {
                 store.currentUser ?
@@ -103,8 +136,8 @@ const Nav = observer(class Nav extends Component {
                   >
                     {
                       store.currentGroup ?
-                      <span>{ store.currentGroup.name }</span>
-                      : <i>Family/Group not yet set</i>
+                      <span>Group:{' '}{ store.currentGroup.name }</span>
+                      : <i>Group not yet set</i>
                     }
                   </a>
               </li>
@@ -151,38 +184,6 @@ const Nav = observer(class Nav extends Component {
             <li className="nav-item">
               <a
                 className="nav-link"
-                href="#page:search"
-                onClick={e => {
-                  e.preventDefault()
-                  this.setState({collapsed: true})
-                  this.props.onGotoSearch()
-                }}
-                >
-                  Search
-                </a>
-            </li>
-            <li className="nav-item">
-              <a
-                className="nav-link"
-                href="#page:starred"
-                onClick={e => {
-                  e.preventDefault()
-                  this.setState({collapsed: true})
-                  this.props.onGotoStarred()
-                }}
-                >
-                  <Heart
-                    filled={true}
-                    bubble={e => {
-                      // this.setState({starred: !this.state.starred}, this.saveChanges)
-                    }}
-                  />
-                  Favorites
-                </a>
-            </li>
-            <li className="nav-item">
-              <a
-                className="nav-link"
                 href="#"
                 onClick={e => {
                   e.preventDefault()
@@ -200,3 +201,42 @@ const Nav = observer(class Nav extends Component {
 })
 
 export default Nav
+
+
+const ShowOfflineIndicator = ({ offline }) => {
+  let style = {
+    backgroundImage: `url(${process.env.PUBLIC_URL}/static/offline-sprite.png)`,
+    backgroundRepeat: 'no-repeat',
+    display: 'inline-block',
+    width: 16,
+    height: 16,
+  }
+  if (offline) {
+    style.backgroundPosition = '-16px 0'
+  } else {
+    style.backgroundPosition = '0 0'
+  }
+  return (
+    <span className="offline-indicator">
+      {
+        offline ?
+        <span
+          className="offline"
+          title="You are *not* connected to the Internet"
+          >
+          <span style={style}></span>
+          Offline
+        </span>
+        :
+        <span
+          className="online"
+          title="You are connected to the Internet and every save is backed up"
+          >
+          <span style={style}></span>
+          Online
+        </span>
+      }
+    </span>
+  )
+
+}
