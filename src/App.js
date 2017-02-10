@@ -25,7 +25,6 @@ const decodeDatetime = (dateStr) => dateFns.parse(dateStr)
 // Date object to string
 const encodeDatetime = (dateObj) => dateFns.getTime(dateObj)
 
-console.log(process.env.REACT_APP_DEV);
 if (process.env.REACT_APP_DEV) {
   store.dev = true
   document.title = 'Dev ' + document.title
@@ -94,6 +93,8 @@ const App = observer(class App extends Component {
   }
 
   componentDidMount() {
+    this.searchData = {}
+
     if (this.database) {
       this.database.ref('.info/connected')
       .on('value', snapshot => {
@@ -234,7 +235,7 @@ const App = observer(class App extends Component {
     // compare 'data' with 'this.searchData[date]' and if any of them is
     // different return true.
     let differentKeys = Object.keys(data).filter(key => {
-      return data[key] !== this.searchData[date][key]
+      return this.searchData[date] && data[key] !== this.searchData[date][key]
     })
     return !!differentKeys.length
   }

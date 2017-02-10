@@ -12,5 +12,16 @@
       "database-rules.json",
       "storage.rules"
     ]
-  }
+  },
+  "headers": [
+    {
+      "source" : "static/*.@(jpg|jpeg|gif|png|svg)",
+      "headers" : [
+        {
+          "key" : "Cache-Control",
+          "value" : "max-age=7200"
+        }
+      ]
+    }
+  ]
 }
