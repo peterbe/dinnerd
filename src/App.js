@@ -25,7 +25,7 @@ const decodeDatetime = (dateStr) => dateFns.parse(dateStr)
 // Date object to string
 const encodeDatetime = (dateObj) => dateFns.getTime(dateObj)
 
-if (process.env.REACT_APP_DEV) {
+if (process.env.REACT_APP_DEV === 'true') {
   store.dev = true
   document.title = 'Dev ' + document.title
 }

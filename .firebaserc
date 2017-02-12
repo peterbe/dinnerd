@@ -1,5 +1,6 @@
 {
   "projects": {
-    "dev": "dinnerd-dev"
+    "dev": "dinnerd-dev",
+    "prod": "dinnerd-45b97"
   }
 }
