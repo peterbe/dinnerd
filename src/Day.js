@@ -64,6 +64,9 @@ const Day = observer(class Day extends Component {
     this.closeEditSoon = window.setTimeout(() => {
       this.setState({edit: false})
     }, 300)
+    this.saveSoon = window.setTimeout(() => {
+      this.saveChanges()
+    }, 1000)
   }
 
   inputFocused(event) {
@@ -73,6 +76,9 @@ const Day = observer(class Day extends Component {
     }
     if (this.closeEditSoon) {
       window.clearTimeout(this.closeEditSoon)
+    }
+    if (this.saveSoon) {
+      window.clearTimeout(this.saveSoon)
     }
   }
 
@@ -210,6 +216,9 @@ const Day = observer(class Day extends Component {
                   className="btn btn-primary btn-sm"
                   disabled={this.state.saving}
                   onClick={e => {
+                    if (this.saveSoon) {
+                      window.clearTimeout(this.saveSoon)
+                    }
                     this.saveChanges()
                     // If there was focus on any inputs, and you press a
                     // button like that, that input triggers its onBlur,
@@ -230,6 +239,9 @@ const Day = observer(class Day extends Component {
                 type="button"
                 className="btn btn-info btn-sm"
                 onClick={e => {
+                  if (this.saveSoon) {
+                    window.clearTimeout(this.saveSoon)
+                  }
                   this.setState({edit: false})
                 }}
                 >Close</button>
@@ -245,6 +257,9 @@ const Day = observer(class Day extends Component {
                       text: this.state.text,
                       notes: this.state.notes,
                       starred: this.state.starred
+                    }
+                    if (this.saveSoon) {
+                      window.clearTimeout(this.saveSoon)
                     }
                     setTimeout(() => {
                       this.setState({edit: false})
