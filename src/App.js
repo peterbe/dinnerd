@@ -454,6 +454,11 @@ const App = observer(class App extends Component {
           store.dateRangeEnd = null
           this.loadInitialWeek()
         }}
+        onClearCache={() => {
+          localStorage.removeItem('searchData')
+          localStorage.removeItem('searchIndex')
+          window.location.reload(true)
+        }}
       />
     } else if (this.state.page === 'search') {
       page = <Search
