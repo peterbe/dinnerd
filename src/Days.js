@@ -49,8 +49,14 @@ const Days = observer(class Days extends Component {
     const weekStartsOn = store.settings.weekStartsOnAMonday ? 1 : 0
     return (
       <div className="days">
+        {/*
+          By default currentUser===null, but if firebase
+          has successfully run onAuthStateChanged at least once
+          then it gets set to 'false'.
+          Only then show the unauthorized warning.
+          */}
         {
-          !store.currentUser ?
+          store.currentUser === false && !store.offline ?
           <ShowUnauthorizedWarning
             gotoSignInPage={this.props.gotoSignInPage}
           />

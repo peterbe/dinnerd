@@ -52,18 +52,12 @@ const App = observer(class App extends Component {
       }
       window.firebase.initializeApp(config)
       this.auth = window.firebase.auth()
+      this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this))
       if (process.env.REACT_APP_FIREBASE_LOGGING === 'true') {
         window.firebase.database.enableLogging(true)
       }
       this.database = window.firebase.database()
     }
-    this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this))
-
-    setTimeout(() => {
-      // window.addToHomescreen({debug: true})
-      window.addToHomescreen()
-    }, 3000)
-
   }
 
   onAuthStateChanged(user) {
@@ -91,10 +85,17 @@ const App = observer(class App extends Component {
         // console.warn('Figure out which is your default group!');
         this.setState({page: 'group'})
       }
+
+      // Only bother for people who bother to sign in.
+      setTimeout(() => {
+        // window.addToHomescreen({debug: true})
+        window.addToHomescreen()
+      }, 3000)
+
     } else {
       // User is signed out!
       console.log('No user', 'Signed out?');
-      store.currentUser = null
+      store.currentUser = false
     }
   }
 
@@ -180,9 +181,6 @@ const App = observer(class App extends Component {
     if (!store.dateRangeEnd) {
       throw new Error('store.dateRangeEnd not set')
     }
-    // console.log('Listening to days between',
-    //   [encodeDatetime(store.dateRangeStart), encodeDatetime(store.dateRangeEnd)]
-    // );
     if (this.daysRef) {
       this.daysRef.off()
     }
@@ -215,7 +213,7 @@ const App = observer(class App extends Component {
       }
     })
     this.daysRef.on('child_changed', child => {
-      console.log('DAY CHANGED!', child.key, child.val());
+      // console.log('DAY CHANGED!', child.key, child.val());
       const data = child.val()
       store.addDay(
         child.key,
@@ -225,6 +223,7 @@ const App = observer(class App extends Component {
         data.starred
       )
       if (this.differentSearchData(child.key, data)) {
+
         this.searchData[child.key] = {
           date: child.key,
           datetime: data.datetime,
@@ -240,6 +239,9 @@ const App = observer(class App extends Component {
   differentSearchData(date, data) {
     // compare 'data' with 'this.searchData[date]' and if any of them is
     // different return true.
+    if (!this.searchData[date]) {
+      return true
+    }
     let differentKeys = Object.keys(data).filter(key => {
       return this.searchData[date] && data[key] !== this.searchData[date][key]
     })
@@ -302,7 +304,10 @@ const App = observer(class App extends Component {
       let date = dateFns.format(datetime, DATE_FORMAT)
       if (!store.days.has(date)) {
         // put a blank on in lieu
+        // console.log('ADDING', date);
         store.addDay(date, datetime)
+      } else {
+        // console.log('SKIPPING', date);
       }
     })
     this.listenOnDayRefs()
@@ -330,19 +335,24 @@ const App = observer(class App extends Component {
     localStorage.setItem('searchIndex', JSON.stringify(this.searchIndex))
     this.searchData[day.date] = {
       date: day.date,
+      datetime: encodeDatetime(day.datetime),
       text: data.text,
       notes: data.notes,
       starred: data.starred,
     }
     localStorage.setItem('searchData', JSON.stringify(this.searchData))
+    if (store.currentUser) {
+      return dayRef.set({
+        date: day.date,  // XXX is this necessary
+        datetime: encodeDatetime(day.datetime),
+        text: data.text,
+        notes: data.notes,
+        starred: data.starred,
+      })
+    } else {
+      return Promise.resolve(null)
+    }
 
-    return dayRef.set({
-      date: day.date,  // XXX is hit nsecessary?
-      datetime: encodeDatetime(day.datetime),
-      text: data.text,
-      notes: data.notes,
-      starred: data.starred,
-    })
   }
 
   getFavorites() {
@@ -440,6 +450,8 @@ const App = observer(class App extends Component {
         }}
         onChangeWeekStart={() => {
           // if the user has changed start day of the week, re-load
+          store.dateRangeStart = null
+          store.dateRangeEnd = null
           this.loadInitialWeek()
         }}
       />
