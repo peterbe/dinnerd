@@ -1,9 +1,11 @@
 import React, { Component } from 'react'
 import dateFns from 'date-fns'
 import elasticlunr from 'elasticlunr'
-// import lf from 'lovefield'
 import { observer } from 'mobx-react'
 import zenscroll from 'zenscroll'
+import * as firebase from 'firebase/app'
+import 'firebase/auth'
+import 'firebase/database'
 
 import './App.css'
 import Nav from './Nav'
@@ -38,10 +40,10 @@ const App = observer(class App extends Component {
       page: 'days',
     }
 
-    if (typeof window.firebase === 'undefined') {
-      store.noFirebase = true
-      this.database = this.auth = null
-    } else {
+    // if (typeof window.firebase === 'undefined') {
+    //   store.noFirebase = true
+    //   this.database = this.auth = null
+    // } else {
       // Initialize Firebase
       const config = {
         apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
@@ -50,14 +52,14 @@ const App = observer(class App extends Component {
         storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
         messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
       }
-      window.firebase.initializeApp(config)
-      this.auth = window.firebase.auth()
+      const firebaseApp = firebase.initializeApp(config)
+      this.auth = firebaseApp.auth()
       this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this))
       if (process.env.REACT_APP_FIREBASE_LOGGING === 'true') {
-        window.firebase.database.enableLogging(true)
+        firebaseApp.database.enableLogging(true)
       }
-      this.database = window.firebase.database()
-    }
+      this.database = firebaseApp.database()
+    // }
   }
 
   onAuthStateChanged(user) {
