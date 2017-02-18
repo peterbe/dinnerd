@@ -111,6 +111,7 @@ const App = observer(class App extends Component {
           }
           this.triggerNotOffline()
         } else {
+          console.log('navigator.onLine?', navigator.onLine);
           if (store.offline === null) {
             // It it hasn't been set yet, give it some time to do so
             this.setOfflineTimeout = window.setTimeout(() => {
