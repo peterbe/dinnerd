@@ -542,7 +542,7 @@ const App = observer(class App extends Component {
         }}
       />
     } else {
-      if (this.state.page !== 'days') {
+      if (this.state.page !== 'days' && store.currentUser) {
         // throw new Error(`Unsure about page '${page}'`)
         console.warn(`Unsure about page '${this.state.page}'`)
       }

@@ -8,8 +8,14 @@ body, h2, h3, h4, h5 {
 }
 
 
+div.day,
+h3.week-head {
+  margin-top: 0 !important;
+}
+
 .App-header,
 div.options,
+span.weekday-head-date,
 nav {
   display: none !important;
 }

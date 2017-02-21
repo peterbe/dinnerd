@@ -375,7 +375,11 @@ export const DisplayDay = ({ text, notes, starred, fieldClicked }) => {
       <p
         className="text"
         onClick={e => fieldClicked('text')}>
-        { text }
+        {
+          text.split('\n').map((item, key) => (
+            <span key={key}>{item}<br/></span>
+          ))
+        }
         { starred ?
           <Heart
             size={16}
