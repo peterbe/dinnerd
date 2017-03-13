@@ -11,6 +11,7 @@ import {
   Heart,
   ShowWeekHeaderDates,
   debounce,
+  pagifyPromptText,
  } from './Common'
 import store from './Store'
 
@@ -193,6 +194,7 @@ const Day = observer(class Day extends Component {
                     if (this.closeEditSoon) {
                       window.clearTimeout(this.closeEditSoon)
                     }
+                    text = pagifyPromptText(text)
                     this.setState({notes: text, saved: false, searchResults: {}})
                   }}
                 />

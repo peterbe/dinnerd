@@ -136,7 +136,7 @@ const ShowUnauthorizedWarning = ({ gotoSignInPage }) => {
       <p className="mb-0">
         <button
           type="button"
-          className="btn btn-primary"
+          className="btn btn-warning btn-block"
           onClick={e => {
             gotoSignInPage()
           }}

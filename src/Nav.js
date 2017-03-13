@@ -165,7 +165,7 @@ const Nav = observer(class Nav extends Component {
                     this.setState({collapsing: false, collapsed: true})
                     this.props.onGotoWeek(true)
                   }}
-                  >{store.dateRangeLength} Close all { store.dateRangeLength / 7 - 1 } <i>other</i> weeks
+                  >Close all { store.dateRangeLength / 7 - 1 } <i>other</i> weeks
                 </a>
               </li>
               : null

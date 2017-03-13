@@ -67,3 +67,27 @@ export const ShowFirebaseError = ({ heading, error }) => {
     </div>
   )
 }
+
+
+const pagifyRegex = /\b(page |p\.?|p\.? )(\d+)$/
+
+export const pagifyScrubText = (text) => {
+  // Any string that ends with...
+  //   page 123
+  //   p. 123
+  //   p123
+  //   p.123
+  // gets the number part replaced with a ? character.
+  return text.replace(pagifyRegex, 'page ?')
+}
+
+export const pagifyPromptText = (text) => {
+  if (pagifyRegex.test(text)) {
+    const defaultPage = text.match(pagifyRegex)[2]
+    const page = prompt('What page this time?', defaultPage)
+    if (page) {
+      text = text.replace(pagifyRegex, `page ${page}`)
+    }
+  }
+  return text
+}

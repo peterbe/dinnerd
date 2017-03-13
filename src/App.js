@@ -17,7 +17,7 @@ import SignIn from './SignIn'
 import Search from './Search'
 import Group from './Group'
 import store from './Store'
-import { makeDayId } from './Common'
+import { makeDayId, pagifyScrubText } from './Common'
 
 const DATE_FORMAT = 'YYYY-MM-DD'
 
@@ -136,7 +136,7 @@ const App = observer(class App extends Component {
       const searchIndexAsJson = localStorage.getItem('searchIndex')
       const searchDataAsJson = localStorage.getItem('searchData')
       if (searchIndexAsJson && searchDataAsJson) {
-        console.log('this.searchIndex created from JSON');
+        // console.log('this.searchIndex created from JSON');
         this.searchIndex = elasticlunr.Index.load(
           JSON.parse(searchIndexAsJson)
         )
@@ -159,15 +159,15 @@ const App = observer(class App extends Component {
         }
 
       } else {
-        console.log('this.searchIndex created from, elasticlunr', elasticlunr);
-        this.searchIndex = elasticlunr(function () {
-          this.addField('text')
-          this.addField('notes')
-          this.setRef('date')
-          // not store the original JSON document to reduce the index size
-          this.saveDocument(false)
-        })
-        this.searchData = {}
+        // console.log('this.searchIndex created from, elasticlunr', elasticlunr);
+        // this.searchIndex = elasticlunr(function () {
+        //   this.addField('text')
+        //   this.addField('notes')
+        //   this.setRef('date')
+        //   // not store the original JSON document to reduce the index size
+        //   this.saveDocument(false)
+        // })
+        // this.searchData = {}
         this.loadSearchIndex()
       }
     }
@@ -256,6 +256,15 @@ const App = observer(class App extends Component {
   }
 
   loadSearchIndex() {
+    // console.log('this.searchIndex created from, elasticlunr', elasticlunr);
+    this.searchIndex = elasticlunr(function () {
+      this.addField('text')
+      this.addField('notes')
+      this.setRef('date')
+      // not store the original JSON document to reduce the index size
+      this.saveDocument(false)
+    })
+    this.searchData = {}
     if (this._searchCache) {
       this._searchCache = {}
     }
@@ -400,6 +409,7 @@ const App = observer(class App extends Component {
       text,
       searchConfig,
     )
+    console.log('FOUND', found);
     if (!found.length) {
       return []
     }
@@ -430,21 +440,17 @@ const App = observer(class App extends Component {
       return this.searchData[result.ref]
     }).filter(result => {
       let hash = result[key].toLowerCase()
+      if (key === 'notes') {
+        // This will make "some cookbook page 123" and "some cookbook p.100"
+        // both into "some cookbook page ?"
+        hash = pagifyScrubText(hash)
+      }
       if (!uniqueTexts.has(hash)) {
         uniqueTexts.add(hash)
         return true
       }
       return false
     })
-    // return store.days.values().filter(day => {
-    //   if (days.includes(day.date)) {
-    //     if (day[key] && !uniqueTexts.has(day[key])) {
-    //       uniqueTexts.add(day[key])
-    //       return true
-    //     }
-    //   }
-    //   return false
-    // })
   }
 
   render() {
@@ -536,6 +542,7 @@ const App = observer(class App extends Component {
           this.loadInitialWeek()
           this.daysRef.off()
           this.listenOnDayRefs()
+
           this.loadSearchIndex()
         }}
         onClosePage={e => {
