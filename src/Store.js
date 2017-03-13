@@ -42,7 +42,11 @@ class Store {
       }),
       get dateRangeLength() {
         if (this.dateRangeStart) {
-          return (this.dateRangeEnd - this.dateRangeStart) / (1000 * 24 * 3600)
+          // If dateRangeStart and dateRangeEnd spans two different
+          // day-light savings events, this might not add up to a multiple
+          // of 7 as expected.
+          // That's why it needs to be rounded to the nearest integer.
+          return Math.round((this.dateRangeEnd - this.dateRangeStart) / (1000 * 24 * 3600))
         } else {
           return 7
         }

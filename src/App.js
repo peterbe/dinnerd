@@ -89,10 +89,12 @@ const App = observer(class App extends Component {
       }
 
       // Only bother for people who bother to sign in.
-      setTimeout(() => {
-        // window.addToHomescreen({debug: true})
-        window.addToHomescreen()
-      }, 3000)
+      if (window.addToHomescreen) {
+        setTimeout(() => {
+          // window.addToHomescreen({debug: true})
+          window.addToHomescreen()
+        }, 3000)
+      }
 
     } else {
       // User is signed out!
@@ -134,6 +136,7 @@ const App = observer(class App extends Component {
       const searchIndexAsJson = localStorage.getItem('searchIndex')
       const searchDataAsJson = localStorage.getItem('searchData')
       if (searchIndexAsJson && searchDataAsJson) {
+        console.log('this.searchIndex created from JSON');
         this.searchIndex = elasticlunr.Index.load(
           JSON.parse(searchIndexAsJson)
         )
@@ -156,6 +159,7 @@ const App = observer(class App extends Component {
         }
 
       } else {
+        console.log('this.searchIndex created from, elasticlunr', elasticlunr);
         this.searchIndex = elasticlunr(function () {
           this.addField('text')
           this.addField('notes')
