@@ -320,16 +320,17 @@ const Day = observer(class Day extends Component {
       <ReactCSSTransitionGroup
             transitionName="fadein"
             transitionAppear={true}
-            transitionAppearTimeout={300}
+            transitionAppearTimeout={200}
             transitionEnter={false}
             transitionLeave={false}>
         <div className="day" id={makeDayId(day.datetime)}>
           { firstDateThisWeek ? <ShowWeekHeader datetime={day.datetime}/> : null }
-          <h5 className="weekday-head">
-            {dateFns.format(day.datetime, 'dddd')}
-            {' '}
-            <ShowWeekdayHeadDate datetime={day.datetime}/>
-          </h5>
+          <div className="row">
+            <h5 className="col">{dateFns.format(day.datetime, 'dddd')}</h5>
+            <div className="col" style={{textAlign: 'right'}}>
+              <ShowWeekdayHeadDate datetime={day.datetime}/>
+            </div>
+          </div>
           { display }
         </div>
       </ReactCSSTransitionGroup>
