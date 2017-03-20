@@ -105,12 +105,12 @@ const Days = observer(class Days extends Component {
             <button
               type="button"
               className="btn btn-primary btn-block"
-              onTouchStart={e => {
-                this.setState({loadingNextWeek: true})
-                setTimeout(() => {
-                  this.setState({loadingNextWeek: false})
-                }, 1000)
-              }}
+              // onTouchStart={e => {
+              //   this.setState({loadingNextWeek: true})
+              //   setTimeout(() => {
+              //     this.setState({loadingNextWeek: false})
+              //   }, 1000)
+              // }}
               onClick={this.loadNextWeek.bind(this)}>
               { this.state.loadingNextWeek ? 'Loading...' : 'Next week' }
             </button>
