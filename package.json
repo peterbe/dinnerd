@@ -16,6 +16,7 @@
     "react-addons-css-transition-group": "^15.4.2",
     "react-dom": "^15.4.2",
     "react-highlight-words": "^0.6.0",
+    "react-linkify": "^0.2.0",
     "zenscroll": "^3.3.0"
   },
   "scripts": {

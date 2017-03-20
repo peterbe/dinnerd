@@ -4,6 +4,7 @@ import dateFns from 'date-fns'
 import { observer } from 'mobx-react'
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
 import zenscroll from 'zenscroll'
+import Linkify from 'react-linkify'
 
 import {
   makeDayId,
@@ -391,11 +392,14 @@ export const DisplayDay = ({ text, notes, starred, fieldClicked }) => {
           /> : null
         }
       </p>
-      <p
+      <div
         className="notes"
         onClick={e => fieldClicked('notes')}>
-        { notes }
-      </p>
+        <Linkify
+          properties={{target: '_blank'}}>
+          { notes }
+        </Linkify>
+      </div>
     </div>
   )
 }
