@@ -96,9 +96,8 @@ const Search = observer(class Search extends Component {
         }
 
         <button
-          style={{marginTop: 40}}
           type="button"
-          className="btn btn-primary btn-block"
+          className="btn btn-primary btn-block close-button"
           onClick={this.props.onClosePage}
           >
           Close Search
