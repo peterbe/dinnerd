@@ -52,6 +52,18 @@ const User = observer(class User extends Component {
           >
           Change your password
         </button>
+        <button
+          type="button"
+          className="btn btn-info btn-block"
+          onClick={e => {
+            store.currentUser.getToken().then(t => {
+              console.warn('Access Token', t)
+              prompt(t)
+            })
+          }}
+          >
+          Get your Access Token
+        </button>
 
         <button
           type="button"

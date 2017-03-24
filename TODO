@@ -1,6 +1,15 @@
 TODO
 ====
 
+* Experiment with:
+appcache-manifest "build/index.{html,css,js}" "build/**/*.{css,js}"
+"build/burger.png" --network-star -o build/index.appcache
+
+* Convert URLs to titles using
+  http://tools.buzzstream.com/meta-tag-extractor
+  or http://embed.ly/docs/explore/extract?url=https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FAPI%2FPage_Visibility_API
+
+
 * Try https://github.com/BafS/Gutenberg
   for printing.
 
