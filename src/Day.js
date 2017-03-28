@@ -203,7 +203,7 @@ const Day = observer(class Day extends Component {
             </div>
           </form>
           <div className="actions row">
-            <div className="action starred col-4">
+            <div className="action starred col-2">
               <Heart
                 filled={this.state.starred}
                 bubble={e => {
@@ -211,7 +211,7 @@ const Day = observer(class Day extends Component {
                 }}
               />
             </div>
-            <div className="action buttons col-8">
+            <div className="action buttons col-10">
               {
                 !this.state.saved || this.state.saving ?
                 <button
@@ -384,22 +384,22 @@ export const DisplayDay = ({ text, notes, starred, fieldClicked }) => {
             <span key={key}>{item}<br/></span>
           ))
         }
-        { starred ?
-          <Heart
-            size={16}
-            filled={starred}
-            bubble={e => {}}
-          /> : null
-        }
       </p>
-      <div
+      <p
         className="notes"
         onClick={e => fieldClicked('notes')}>
         <Linkify
           properties={{target: '_blank'}}>
           { notes }
         </Linkify>
-      </div>
+      </p>
+      { starred ?
+        <p><Heart
+          size={16}
+          filled={starred}
+          bubble={e => {}}
+        /></p> : null
+      }
     </div>
   )
 }

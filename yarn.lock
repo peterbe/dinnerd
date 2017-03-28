@@ -1535,9 +1535,9 @@ dashdash@^1.12.0:
   dependencies:
     assert-plus "^1.0.0"
 
-date-fns@^1.28.1:
-  version "1.28.1"
-  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-1.28.1.tgz#9e2325c77b1cb7da3a9fd9822ba52c188a4ce91b"
+date-fns@^1.28.2:
+  version "1.28.2"
+  resolved "https://registry.yarnpkg.com/date-fns/-/date-fns-1.28.2.tgz#19e4192d68875c0bf7c9537e3f296a8ec64853ef"
 
 date-now@^0.1.4:
   version "0.1.4"
@@ -2249,9 +2249,9 @@ firebase-admin@^4.1.3:
     faye-websocket "0.9.3"
     jsonwebtoken "7.1.9"
 
-firebase@^3.7.2:
-  version "3.7.2"
-  resolved "https://registry.yarnpkg.com/firebase/-/firebase-3.7.2.tgz#fab14f7e31de007dd373f9295a81f6fba04d3c98"
+firebase@^3.7.3:
+  version "3.7.3"
+  resolved "https://registry.yarnpkg.com/firebase/-/firebase-3.7.3.tgz#5f143638a84874095a7faf411589e059ac419ccc"
   dependencies:
     dom-storage "2.0.2"
     faye-websocket "0.9.3"
