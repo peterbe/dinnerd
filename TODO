@@ -1,6 +1,9 @@
 TODO
 ====
 
+* Install that react-perf addon and see if some components really do
+  over render.
+
 * Experiment with:
 appcache-manifest "build/index.{html,css,js}" "build/**/*.{css,js}"
 "build/burger.png" --network-star -o build/index.appcache
