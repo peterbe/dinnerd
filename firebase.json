@@ -14,6 +14,19 @@
     ],
     "headers": [
       {
+        "source": "/index.appcache",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=0"
+          },
+          {
+            "key": "Content-Type",
+            "value": "text/cache-manifest"
+          }
+        ]
+      },
+      {
         "source": "/",
         "headers": [
           {
