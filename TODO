@@ -1,9 +1,8 @@
 TODO
 ====
 
-* Experiment with https://www.npmjs.com/package/autobind-decorator
-  to see if we can avoid having to type any
-  `this.someMethod=this.someMethod.bind(this)`
+* Is there a way to import much less of recompose since we only need
+  pure and onlyUpdateForKeys
 
 * Avoid DOM query selectors and use refs
   https://facebook.github.io/react/docs/refs-and-the-dom.html
@@ -46,3 +45,7 @@ appcache-manifest "build/index.{html,css,js}" "build/**/*.{css,js}"
 
 * Install that react-perf addon and see if some components really do
   over render.
+
+* Experiment with https://www.npmjs.com/package/autobind-decorator
+  to see if we can avoid having to type any
+  `this.someMethod=this.someMethod.bind(this)`
