@@ -1,6 +1,9 @@
 TODO
 ====
 
+* Import addtohomescreen as a module
+  https://github.com/cubiq/add-to-homescreen/issues/257
+
 * Is there a way to import much less of recompose since we only need
   pure and onlyUpdateForKeys
 
