@@ -1,13 +1,14 @@
 import React, { Component } from 'react'
 import dateFns from 'date-fns'
 import { observer } from 'mobx-react'
+import { pure } from 'recompose'
 
 import store from './Store'
 import { ShowWeekHeaderDates, Heart } from './Common'
 
 const Nav = observer(class Nav extends Component {
-  constructor() {
-    super()
+  constructor(props) {
+    super(props)
     this.state = {
       collapsed: true,
       collapsing: false,
@@ -90,6 +91,7 @@ const Nav = observer(class Nav extends Component {
                 >
                   <Heart
                     filled={true}
+                    size={14}
                     bubble={e => {
                     }}
                   />
@@ -203,7 +205,8 @@ const Nav = observer(class Nav extends Component {
 export default Nav
 
 
-const ShowOfflineIndicator = ({ offline }) => {
+export const ShowOfflineIndicator = pure(
+  ({ offline }) => {
   let style = {
     backgroundImage: `url(${process.env.PUBLIC_URL}/static/offline-sprite.png)`,
     backgroundRepeat: 'no-repeat',
@@ -238,5 +241,4 @@ const ShowOfflineIndicator = ({ offline }) => {
       }
     </span>
   )
-
-}
+})

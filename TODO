@@ -1,8 +1,12 @@
 TODO
 ====
 
-* Install that react-perf addon and see if some components really do
-  over render.
+* Experiment with https://www.npmjs.com/package/autobind-decorator
+  to see if we can avoid having to type any
+  `this.someMethod=this.someMethod.bind(this)`
+
+* Avoid DOM query selectors and use refs
+  https://facebook.github.io/react/docs/refs-and-the-dom.html
 
 * Convert URLs to titles using
   http://tools.buzzstream.com/meta-tag-extractor
@@ -39,3 +43,6 @@ DONE
 * Experiment with:
 appcache-manifest "build/index.{html,css,js}" "build/**/*.{css,js}"
 "build/burger.png" --network-star -o build/index.appcache
+
+* Install that react-perf addon and see if some components really do
+  over render.

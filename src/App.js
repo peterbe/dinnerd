@@ -6,6 +6,9 @@ import zenscroll from 'zenscroll'
 import * as firebase from 'firebase/app'
 import 'firebase/auth'
 import 'firebase/database'
+import { pure } from 'recompose'
+
+// import Perf from 'react-addons-perf'
 
 import './App.css'
 import Nav from './Nav'
@@ -23,9 +26,9 @@ const DATE_FORMAT = 'YYYY-MM-DD'
 
 
 // string to Date object
-const decodeDatetime = (dateStr) => dateFns.parse(dateStr)
+const decodeDatetime = dateStr => dateFns.parse(dateStr)
 // Date object to string
-const encodeDatetime = (dateObj) => dateFns.getTime(dateObj)
+const encodeDatetime = dateObj => dateFns.getTime(dateObj)
 
 if (process.env.REACT_APP_DEV === 'true') {
   store.dev = true
@@ -40,29 +43,27 @@ const App = observer(class App extends Component {
       page: 'days',
     }
 
-    // if (typeof window.firebase === 'undefined') {
-    //   store.noFirebase = true
-    //   this.database = this.auth = null
-    // } else {
-      // Initialize Firebase
-      const config = {
-        apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-        authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-        databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
-        storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-        messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-      }
-      const firebaseApp = firebase.initializeApp(config)
-      this.auth = firebaseApp.auth()
-      this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this))
-      if (process.env.REACT_APP_FIREBASE_LOGGING === 'true') {
-        firebaseApp.database.enableLogging(true)
-      }
-      this.database = firebaseApp.database()
-    // }
+    // Initialize Firebase
+    const config = {
+      apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
+      authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
+      databaseURL: process.env.REACT_APP_FIREBASE_DATABASE_URL,
+      storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
+      messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
+    }
+    const firebaseApp = firebase.initializeApp(config)
+    this.auth = firebaseApp.auth()
+    this.auth.onAuthStateChanged(this.onAuthStateChanged.bind(this))
+    if (process.env.REACT_APP_FIREBASE_LOGGING === 'true') {
+      firebaseApp.database.enableLogging(true)
+    }
+    this.database = firebaseApp.database()
   }
 
   onAuthStateChanged(user) {
+
+    // Perf.start()
+
     if (user) {
       // User is signed in!
       // let profilePicUrl = user.photoURL
@@ -104,6 +105,12 @@ const App = observer(class App extends Component {
   }
 
   componentDidMount() {
+
+    // setTimeout(() => {
+    //   Perf.stop()
+    //   Perf.printWasted()
+    // }, 20000)
+
     this.searchData = {}
 
     if (this.database) {
@@ -605,6 +612,14 @@ const App = observer(class App extends Component {
           }}
           onGotoSearch={() => {
             this.setState({page: 'search'})
+            setTimeout(() => {
+              const el = document.querySelector('.search input[type="search"]')
+              if (el) {
+                el.focus()
+              } else {
+                console.warn('No search input element');
+              }
+            }, 200)
           }}
         />
         <div className="page-container" style={{marginTop: 60}}>
@@ -619,7 +634,8 @@ const App = observer(class App extends Component {
 export default App
 
 
-const ShowOfflineWarning = ({ offline }) => {
+const ShowOfflineWarning = pure(
+  ({ offline }) => {
   if (offline !== true) {
     return null
   }
@@ -642,4 +658,4 @@ const ShowOfflineWarning = ({ offline }) => {
       </p>
     </div>
   )
-}
+})

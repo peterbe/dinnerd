@@ -5,6 +5,8 @@ import { observer } from 'mobx-react'
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
 import zenscroll from 'zenscroll'
 import Linkify from 'react-linkify'
+import { pure, onlyUpdateForKeys } from 'recompose'
+import shallowEqual from 'fbjs/lib/shallowEqual'
 
 import {
   makeDayId,
@@ -19,32 +21,28 @@ import store from './Store'
 
 const Day = observer(class Day extends Component {
 
-  constructor() {
-    super()
+  constructor(props) {
+    super(props)
+    const { day } = this.props
     this.state = {
+      text: day.text,
+      notes: day.notes,
+      starred: day.starred,
+      searchResults: {},
       edit: false,
       saving: false,
-      text: '',
-      notes: '',
-      starred: false,
-      searchResults: {},
+      saved: true,
+      hadText: false,
     }
     this.saveChanges = this.saveChanges.bind(this)
     this.autoCompleteSearch = debounce(this.autoCompleteSearch.bind(this), 300)
     this.inputBlurred = this.inputBlurred.bind(this)
     this.inputFocused = this.inputFocused.bind(this)
+    this.fieldClicked = this.fieldClicked.bind(this)
   }
 
-  componentDidMount() {
-    let { day } = this.props
-    this.setState({
-      text: day.text,
-      notes: day.notes,
-      starred: day.starred,
-      saved: true,
-      hadText: false,
-      saving: false,
-    })
+  fieldClicked(field) {
+    this.startEdit(field)
   }
 
   saveChanges() {
@@ -138,8 +136,39 @@ const Day = observer(class Day extends Component {
     })
   }
 
+  shouldComponentUpdate(nextProps, nextState) {
+    let a = {
+      text: this.props.day.text,
+      notes: this.props.day.notes,
+      starred: this.props.day.starred,
+      firstDateThisWeek: this.props.firstDateThisWeek,
+    }
+    let b = {
+      text: nextProps.day.text,
+      notes: nextProps.day.notes,
+      starred: nextProps.day.starred,
+      firstDateThisWeek: nextProps.firstDateThisWeek,
+    }
+    return !shallowEqual(a, b) || !shallowEqual(this.state, nextState)
+    // // let b = nextProps
+    // // console.log('Props?', shallowEqual(a, b), 'State?', shallowEqual(this.state, nextState));
+    //
+    // // return !shallowEqual(a, b) || !shallowEqual(this.state, nextState)
+    // let r= !shallowEqual(a, b) || !shallowEqual(this.state, nextState)
+    // if (r) {
+    //   if (!shallowEqual(a, b)) {
+    //     console.log('DIFFERENT this.props:', a, 'nextProps:', nextProps);
+    //   }
+    //   if (!shallowEqual(this.state, nextState)) {
+    //     console.log('DIFFERENT this.state:', this.state, 'nextState:', nextState);
+    //   }
+    // }
+    // return r
+  }
+
   render() {
     let { day, firstDateThisWeek } = this.props
+
     let display
     if (this.state.edit) {
       display = (
@@ -342,7 +371,8 @@ const Day = observer(class Day extends Component {
 export default Day
 
 
-const ShowWeekdayHeadDate = ({ datetime }) => {
+const ShowWeekdayHeadDate = pure(
+  ({ datetime }) => {
   const now = new Date()
   let text
   if (dateFns.isToday(datetime)) {
@@ -366,9 +396,11 @@ const ShowWeekdayHeadDate = ({ datetime }) => {
     </span>
   )
 
-}
+})
 
-export const DisplayDay = ({ text, notes, starred, fieldClicked }) => {
+
+export const DisplayDay = onlyUpdateForKeys(['text', 'notes', 'starred'])(
+  ({ text, notes, starred, fieldClicked }) => {
   return (
     <div className="display-day">
       {
@@ -402,13 +434,16 @@ export const DisplayDay = ({ text, notes, starred, fieldClicked }) => {
       }
     </div>
   )
-}
+})
 
-const ShowWeekHeader = ({ datetime }) => {
+
+const ShowWeekHeader = pure(
+  ({ datetime }) => {
   const id = makeWeekId(datetime)
   return (
     <h3 className="week-head" id={id} onClick={e => {
       const id = makeDayId(datetime)
+      // XXX Consider using refs instead. See TODO
       const element = document.querySelector('#' + id)
       zenscroll.to(element)
     }}>
@@ -417,10 +452,11 @@ const ShowWeekHeader = ({ datetime }) => {
         end={dateFns.addDays(datetime, 6)}/>
     </h3>
   )
-}
+})
 
 
-const ShowTextAutocomplete = ({ text, results, picked, field = 'text' }) => {
+const ShowTextAutocomplete = pure(
+  ({ text, results, picked, field = 'text' }) => {
   if (!results) {
     return null
   }
@@ -456,4 +492,4 @@ const ShowTextAutocomplete = ({ text, results, picked, field = 'text' }) => {
       </ul>
     </div>
   )
-}
+})

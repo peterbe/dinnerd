@@ -1,6 +1,6 @@
 import React from 'react'
 import dateFns from 'date-fns'
-
+import { pure } from 'recompose'
 
 export const makeWeekId = (datetime) => {
   return 'week-head-' + dateFns.format(datetime, 'YYYYW')
@@ -10,7 +10,8 @@ export const makeDayId = (datetime) => {
   return 'day-' + dateFns.format(datetime, 'YYYYMMDD')
 }
 
-export const ShowWeekHeaderDates = ({ start, end }) => {
+export const ShowWeekHeaderDates = pure(
+  ({ start, end }) => {
   return (
     <span className="week-head-dates">
       { dateFns.format(start, 'D MMM') }
@@ -20,11 +21,12 @@ export const ShowWeekHeaderDates = ({ start, end }) => {
       { dateFns.format(end, 'D MMM') }
     </span>
   )
-}
+})
 
-export const Heart = ({ filled, bubble }) => {
+export const Heart = pure(
+  ({ filled, bubble, size = 18 }) => {
   return (
-    <svg height="24" version="1.1" width="24" onClick={bubble}>
+    <svg viewBox="0 0 24 24" height={size} version="1.1" width={size} onClick={bubble}>
       <g transform="translate(0 -1028.4)">
         <path
           d="m7 1031.4c-1.5355 0-3.0784 0.5-4.25 1.7-2.3431 2.4-2.2788 6.1 0 8.5l9.25 9.8 9.25-9.8c2.279-2.4 2.343-6.1 0-8.5-2.343-2.3-6.157-2.3-8.5 0l-0.75 0.8-0.75-0.8c-1.172-1.2-2.7145-1.7-4.25-1.7z"
@@ -32,7 +34,7 @@ export const Heart = ({ filled, bubble }) => {
       </g>
     </svg>
   )
-}
+})
 
 
 export function debounce(callback, wait, context = this) {
