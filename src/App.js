@@ -9,6 +9,7 @@ import 'firebase/database'
 import { pure } from 'recompose'
 
 // import Perf from 'react-addons-perf'
+// window.Perf = Perf
 
 import './App.css'
 import Nav from './Nav'

@@ -168,7 +168,6 @@ const Day = observer(class Day extends Component {
 
   render() {
     let { day, firstDateThisWeek } = this.props
-
     let display
     if (this.state.edit) {
       display = (
