@@ -1,17 +1,20 @@
-.PHONY: build appcache release
+.PHONY: build appcache deploy release
 
 help:
-	@echo "Dinnerd Make Tools"
-	@echo "  build           Builds the final static files"
-	@echo "  appcache        Builds the ./build/index.appcache file"
-	@echo "  release         Makes a Firefbase deployment to prod."
-
+	@echo "The list of commands for local development:\n"
+	@echo "  build        Build the static files"
+	@echo "  appcache     Generate the appcache manifest"
+	@echo "  deploy       Send build to Firebase"
+	@echo "  release      All of the above\n"
 
 build:
-	@bin/build.sh
+	./bin/build.sh
 
 appcache:
-	@bin/appcache.sh
+	./bin/appcache.sh
 
-release: build appcache
-	@bin/deploy.sh
+deploy:
+	./bin/deploy.sh
+
+
+release: build appcache deploy

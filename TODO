@@ -1,6 +1,9 @@
 TODO
 ====
 
+* Consider using mobx-state-tree
+  https://codesandbox.io/s/nZ26kGMD
+
 * Import addtohomescreen as a module
   https://github.com/cubiq/add-to-homescreen/issues/257
 
