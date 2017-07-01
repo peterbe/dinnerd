@@ -1,11 +1,19 @@
 import React, { Component } from 'react'
 import { observer } from 'mobx-react'
-import dateFns from 'date-fns'
+import {
+  format,
+  formatDistanceStrict,
+} from 'date-fns/esm'
 
 import { DisplayDay } from './Day'
 import { debounce } from './Common'
 import store from './Store'
 
+const dateFns = {
+  format: format,
+  formatDistanceStrict: formatDistanceStrict,
+
+}
 
 const Search = observer(class Search extends Component {
 
@@ -19,7 +27,7 @@ const Search = observer(class Search extends Component {
     this.autoCompleteSearch = debounce(this.autoCompleteSearch.bind(this), 300)
   }
 
-  autoCompleteSearch() {
+  autoCompleteSearch = () => {
     if (!this.state.search.trim().length) {
       this.setState({
         searchResults: [],
@@ -124,14 +132,11 @@ const ShowSearchResults = ({ results, onClosePage }) => {
                   text={result.text}
                   notes={result.notes}
                   starred={result.starred}
-                  fieldClicked={e => {
-                    // nothing
-                  }}
                 />
                 <p className="last-used">
                   Last used { dateFns.format(result.datetime, 'D MMM') },
                   {' '}
-                  { dateFns.distanceInWordsStrict(
+                  { dateFns.formatDistanceStrict(
                     new Date(), result.datetime, {addSuffix: true}
                   ) }
                 </p>

@@ -1,12 +1,21 @@
 import React, { Component } from 'react'
-import dateFns from 'date-fns'
 import { observer } from 'mobx-react'
 import zenscroll from 'zenscroll'
+import {
+  startOfWeek,
+  subDays,
+  isEqual,
+} from 'date-fns/esm'
 
 import store from './Store'
 import { makeDayId } from './Common'
 import Day from './Day'
 
+const dateFns = {
+  startOfWeek: startOfWeek,
+  subDays: subDays,
+  isEqual: isEqual,
+}
 
 const Days = observer(class Days extends Component {
 
@@ -18,7 +27,7 @@ const Days = observer(class Days extends Component {
     }
   }
 
-  loadPreviousWeek(event) {
+  loadPreviousWeek = (event) => {
     const firstDatetime = store.dateRangeStart
     const firstDatePreviousWeek = dateFns.subDays(firstDatetime, 7)
     this.props.loadWeek(firstDatePreviousWeek)
@@ -31,10 +40,8 @@ const Days = observer(class Days extends Component {
     })
   }
 
-  loadNextWeek(event) {
-    // const lastDatetime = store.days[store.days.length - 1].datetime
+  loadNextWeek = (event) => {
     const firstDateNextWeek = store.dateRangeEnd
-    // const firstDateNextWeek = dateFns.addDays(lastDatetime, 1)
     this.props.loadWeek(firstDateNextWeek)
     this.setState({loadingNextWeek: false}, () => {
       const id = makeDayId(firstDateNextWeek)

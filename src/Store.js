@@ -54,8 +54,10 @@ class Store {
       get filteredDays() {
         return this.days.values().filter(day => {
           if (this.dateRangeStart) {
+            // XXX Can this be replaced with dateFns.isWithinInterval ??
             if (day.datetime >= this.dateRangeStart && day.datetime < this.dateRangeEnd) {
               return true
+            } else {
             }
           } else {
             return true

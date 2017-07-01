@@ -1,6 +1,10 @@
 import React from 'react'
-import dateFns from 'date-fns'
 import { pure } from 'recompose'
+import { format } from 'date-fns/esm'
+
+const dateFns = {
+  format: format,
+}
 
 export const makeWeekId = (datetime) => {
   return 'week-head-' + dateFns.format(datetime, 'YYYYW')

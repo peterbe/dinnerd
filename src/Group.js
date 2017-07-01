@@ -36,7 +36,7 @@ const Group = observer(class Group extends Component {
     this.fetchOtherGroups()
   }
 
-  fetchCurrentGroupCodes() {
+  fetchCurrentGroupCodes = () => {
     if (store.currentGroup && store.settings.defaultGroupId) {
       const { database } = this.props
       database.ref('/group-codes')
@@ -56,7 +56,7 @@ const Group = observer(class Group extends Component {
     }
   }
 
-  fetchOtherGroups() {
+  fetchOtherGroups = () => {
     const { database } = this.props
     // if (store.currentGroup && store.settings.defaultGroupId) {
       database.ref('/user-groups/' + store.currentUser.uid)

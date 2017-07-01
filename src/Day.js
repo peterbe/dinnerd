@@ -1,12 +1,20 @@
 import React, { Component } from 'react'
 import Highlighter from 'react-highlight-words'
-import dateFns from 'date-fns'
 import { observer } from 'mobx-react'
 import ReactCSSTransitionGroup from 'react-addons-css-transition-group'
 import zenscroll from 'zenscroll'
 import Linkify from 'react-linkify'
-import { pure, onlyUpdateForKeys } from 'recompose'
+import { pure } from 'recompose'
 import shallowEqual from 'fbjs/lib/shallowEqual'
+
+import {
+  format,
+  formatDistanceStrict,
+  isSameDay,
+  startOfDay,
+  addDays,
+  subDays,
+} from 'date-fns/esm'
 
 import {
   makeDayId,
@@ -17,6 +25,15 @@ import {
   pagifyPromptText,
  } from './Common'
 import store from './Store'
+
+const dateFns = {
+  format: format,
+  formatDistanceStrict: formatDistanceStrict,
+  isSameDay: isSameDay,
+  startOfDay: startOfDay,
+  addDays: addDays,
+  subDays: subDays,
+}
 
 
 const Day = observer(class Day extends Component {
@@ -101,7 +118,6 @@ const Day = observer(class Day extends Component {
       expand: true,
     }
     const results = this.props.searcher(text, searchConfig)
-    // console.log("RESULTS FROM SEARCH", results);
     let filteredResults = []
     results.forEach(r => {
       if (r.date !== this.props.day.date) {
@@ -166,6 +182,10 @@ const Day = observer(class Day extends Component {
     // return r
   }
 
+  fieldClicked = (field) => {
+    this.startEdit(field)
+  }
+
   render() {
     let { day, firstDateThisWeek } = this.props
     let display
@@ -175,7 +195,6 @@ const Day = observer(class Day extends Component {
           <form onSubmit={e => {
             // This will probably never trigger unless textareas are replaced with inputs
             e.preventDefault()
-            console.log("FOrm submitted!");
           }}>
             <div className="textareas">
               <div className="textarea">
@@ -340,9 +359,7 @@ const Day = observer(class Day extends Component {
         text={day.text}
         notes={day.notes}
         starred={day.starred}
-        fieldClicked={field => {
-          this.startEdit(field)
-        }}/>
+        fieldClicked={this.fieldClicked}/>
     }
 
     return (
@@ -374,14 +391,14 @@ const ShowWeekdayHeadDate = pure(
   ({ datetime }) => {
   const now = new Date()
   let text
-  if (dateFns.isToday(datetime)) {
+  if (dateFns.isSameDay(now, datetime)) {
     text = 'Today'
-  } else if (dateFns.isYesterday(datetime)) {
+  } else if (dateFns.isSameDay(datetime, dateFns.subDays(now, 1))) {
     text = 'Yesterday'
-  } else if (dateFns.isTomorrow(datetime)) {
+  } else if (dateFns.isSameDay(datetime, dateFns.addDays(now, 1))) {
     text = 'Tomorrow'
   } else {
-    text = dateFns.distanceInWordsStrict(
+    text = dateFns.formatDistanceStrict(
       dateFns.startOfDay(now),
       datetime,
       {addSuffix: true}
@@ -398,18 +415,54 @@ const ShowWeekdayHeadDate = pure(
 })
 
 
-export const DisplayDay = onlyUpdateForKeys(['text', 'notes', 'starred'])(
+// export const DisplayDay = onlyUpdateForKeys(['text', 'notes', 'starred'])(
+//   ({ text, notes, starred, fieldClicked }) => {
+//   return (
+//     <div className="display-day">
+//       {
+//         !text.trim() && !notes.trim() ?
+//         <p onClick={e => fieldClicked('text')}><i>empty</i></p>
+//         : null
+//       }
+//       <p
+//         className="text"
+//         onClick={e => fieldClicked('text')}>
+//         {
+//           text.split('\n').map((item, key) => (
+//             <span key={key}>{item}<br/></span>
+//           ))
+//         }
+//       </p>
+//       <p
+//         className="notes"
+//         onClick={e => fieldClicked('notes')}>
+//         <Linkify
+//           properties={{target: '_blank'}}>
+//           { notes }
+//         </Linkify>
+//       </p>
+//       { starred ?
+//         <p><Heart
+//           size={16}
+//           filled={starred}
+//           bubble={e => {}}
+//         /></p> : null
+//       }
+//     </div>
+//   )
+// })
+export const DisplayDay = pure(
   ({ text, notes, starred, fieldClicked }) => {
   return (
     <div className="display-day">
       {
         !text.trim() && !notes.trim() ?
-        <p onClick={e => fieldClicked('text')}><i>empty</i></p>
+        <p onClick={e => fieldClicked && fieldClicked('text')}><i>empty</i></p>
         : null
       }
       <p
         className="text"
-        onClick={e => fieldClicked('text')}>
+        onClick={e => fieldClicked && fieldClicked('text')}>
         {
           text.split('\n').map((item, key) => (
             <span key={key}>{item}<br/></span>
@@ -418,7 +471,7 @@ export const DisplayDay = onlyUpdateForKeys(['text', 'notes', 'starred'])(
       </p>
       <p
         className="notes"
-        onClick={e => fieldClicked('notes')}>
+        onClick={e => fieldClicked && fieldClicked('notes')}>
         <Linkify
           properties={{target: '_blank'}}>
           { notes }

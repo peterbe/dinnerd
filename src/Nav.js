@@ -1,10 +1,14 @@
 import React, { Component } from 'react'
-import dateFns from 'date-fns'
 import { observer } from 'mobx-react'
 import { pure } from 'recompose'
+import { addDays } from 'date-fns/esm'
 
 import store from './Store'
 import { ShowWeekHeaderDates, Heart } from './Common'
+
+// Because I love namespaces
+const dateFns = {addDays: addDays}
+
 
 const Nav = observer(class Nav extends Component {
   constructor(props) {
@@ -46,7 +50,8 @@ const Nav = observer(class Nav extends Component {
             width="30" height="30" className="d-inline-block align-top" alt=""/>
         </button>
         <a
-          className="navbar-brand" href="#"
+          className="navbar-brand"
+          href="#home"
           onClick={e => {
             e.preventDefault()
             this.props.onGotoWeek()
@@ -103,7 +108,7 @@ const Nav = observer(class Nav extends Component {
                 store.currentUser ?
                 <a
                   className="nav-link"
-                  href="#"
+                  href="#currentuser"
                   onClick={e => {
                     e.preventDefault()
                     this.setState({collapsing: false, collapsed: true})
@@ -115,7 +120,7 @@ const Nav = observer(class Nav extends Component {
                 :
                 <a
                   className="nav-link"
-                  href="#"
+                  href="#signin"
                   onClick={e => {
                     e.preventDefault()
                     this.setState({collapsing: false, collapsed: true})
@@ -129,7 +134,7 @@ const Nav = observer(class Nav extends Component {
               <li className="nav-item">
                 <a
                   className="nav-link"
-                  href="#"
+                  href="#group"
                   onClick={e => {
                     e.preventDefault()
                     this.setState({collapsing: false, collapsed: true})
@@ -148,7 +153,7 @@ const Nav = observer(class Nav extends Component {
             <li className="nav-item">
               <a
                 className="nav-link"
-                href="#"
+                href="#gotothisweek"
                 onClick={e => {
                   e.preventDefault()
                   this.setState({collapsing: false, collapsed: true})
@@ -161,7 +166,7 @@ const Nav = observer(class Nav extends Component {
               <li className="nav-item">
                 <a
                   className="nav-link"
-                  href="#"
+                  href="#closeall"
                   onClick={e => {
                     e.preventDefault()
                     this.setState({collapsing: false, collapsed: true})
@@ -186,7 +191,7 @@ const Nav = observer(class Nav extends Component {
             <li className="nav-item">
               <a
                 className="nav-link"
-                href="#"
+                href="#print"
                 onClick={e => {
                   e.preventDefault()
                   window.print()

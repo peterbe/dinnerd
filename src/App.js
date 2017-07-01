@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import dateFns from 'date-fns'
 import elasticlunr from 'elasticlunr'
 import { observer } from 'mobx-react'
 import zenscroll from 'zenscroll'
@@ -7,6 +6,14 @@ import * as firebase from 'firebase/app'
 import 'firebase/auth'
 import 'firebase/database'
 import { pure } from 'recompose'
+
+import {
+  format,
+  getTime,
+  startOfWeek,
+  addDays,
+  toDate,
+} from 'date-fns/esm'
 
 // import Perf from 'react-addons-perf'
 // window.Perf = Perf
@@ -23,11 +30,19 @@ import Group from './Group'
 import store from './Store'
 import { makeDayId, pagifyScrubText } from './Common'
 
+// Because I love namespaces
+const dateFns = {
+  toDate: toDate,
+  getTime: getTime,
+  startOfWeek: startOfWeek,
+  addDays: addDays,
+  format: format,
+}
+
 const DATE_FORMAT = 'YYYY-MM-DD'
 
-
 // string to Date object
-const decodeDatetime = dateStr => dateFns.parse(dateStr)
+const decodeDatetime = dateStr => dateFns.toDate(dateStr)
 // Date object to string
 const encodeDatetime = dateObj => dateFns.getTime(dateObj)
 
@@ -61,7 +76,7 @@ const App = observer(class App extends Component {
     this.database = firebaseApp.database()
   }
 
-  onAuthStateChanged(user) {
+  onAuthStateChanged = (user) => {
 
     // Perf.start()
 
@@ -181,15 +196,15 @@ const App = observer(class App extends Component {
     }
   }
 
-  triggerNotOffline() {
+  triggerNotOffline = () => {
     store.offline = false
   }
 
-  triggerOffline() {
+  triggerOffline = () => {
     store.offline = true
   }
 
-  listenOnDayRefs() {
+  listenOnDayRefs = () => {
     if (!store.dateRangeStart) {
       throw new Error('store.dateRangeStart not set')
     }
@@ -251,7 +266,7 @@ const App = observer(class App extends Component {
     })
   }
 
-  differentSearchData(date, data) {
+  differentSearchData = (date, data) => {
     // compare 'data' with 'this.searchData[date]' and if any of them is
     // different return true.
     if (!this.searchData[date]) {
@@ -263,7 +278,7 @@ const App = observer(class App extends Component {
     return !!differentKeys.length
   }
 
-  loadSearchIndex() {
+  loadSearchIndex = () => {
     // console.log('this.searchIndex created from, elasticlunr', elasticlunr);
     this.searchIndex = elasticlunr(function () {
       this.addField('text')
@@ -308,7 +323,7 @@ const App = observer(class App extends Component {
     })
   }
 
-  loadInitialWeek() {
+  loadInitialWeek = () => {
     const weekStartsOnAMonday = store.settings.weekStartsOnAMonday || false
     store.firstDateThisWeek = dateFns.startOfWeek(
       new Date(), {weekStartsOn: weekStartsOnAMonday ? 1 : 0}
@@ -316,7 +331,7 @@ const App = observer(class App extends Component {
     return this.loadWeek(store.firstDateThisWeek)
   }
 
-  loadWeek(firstDate) {  // should maybe be called loadBlankWeekDays
+  loadWeek = (firstDate) => {  // should maybe be called loadBlankWeekDays
     if (!firstDate || typeof firstDate !== 'object') {
       throw new Error("Expect 'firstDate' to be a date object")
     }
@@ -327,17 +342,17 @@ const App = observer(class App extends Component {
       let datetime = dateFns.addDays(firstDate, d)
       let date = dateFns.format(datetime, DATE_FORMAT)
       if (!store.days.has(date)) {
-        // put a blank on in lieu
-        // console.log('ADDING', date);
+        // put a blank one in lieu
+        // console.log('ADDING', date, datetime);
         store.addDay(date, datetime)
       } else {
-        // console.log('SKIPPING', date);
+        // console.log('SKIPPING', date, datetime);
       }
     })
     this.listenOnDayRefs()
   }
 
-  updateDay(day, data) {
+  updateDay = (day, data) => {
     // don't forget to update the big mutable
     day.text = data.text
     day.notes = data.notes
@@ -379,7 +394,7 @@ const App = observer(class App extends Component {
 
   }
 
-  getFavorites() {
+  getFavorites = () => {
     return this.database.ref(
       'groups/' + store.settings.defaultGroupId + '/days'
     )
@@ -409,7 +424,7 @@ const App = observer(class App extends Component {
     })
   }
 
-  searcher(text, searchConfig) {
+  searcher = (text, searchConfig) => {
     if (!text.trim()) {
       throw new Error('Empty search')
     }
