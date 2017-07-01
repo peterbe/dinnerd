@@ -27,6 +27,10 @@ const Search = observer(class Search extends Component {
     this.autoCompleteSearch = debounce(this.autoCompleteSearch.bind(this), 300)
   }
 
+  componentDidMount = () => {
+    this.refs.search.focus()
+  }
+
   autoCompleteSearch = () => {
     if (!this.state.search.trim().length) {
       this.setState({
@@ -72,6 +76,7 @@ const Search = observer(class Search extends Component {
           <input
             type="search"
             className="form-control"
+            ref="search"
             onChange={e => {
               this.setState({search: e.target.value}, this.autoCompleteSearch)
             }}

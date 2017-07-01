@@ -628,14 +628,6 @@ const App = observer(class App extends Component {
           }}
           onGotoSearch={() => {
             this.setState({page: 'search'})
-            setTimeout(() => {
-              const el = document.querySelector('.search input[type="search"]')
-              if (el) {
-                el.focus()
-              } else {
-                console.warn('No search input element');
-              }
-            }, 200)
           }}
         />
         <div className="page-container" style={{marginTop: 60}}>

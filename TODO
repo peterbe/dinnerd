@@ -7,9 +7,6 @@ TODO
 * Is there a way to import much less of recompose since we only need
   pure and onlyUpdateForKeys
 
-* Avoid DOM query selectors and use refs
-  https://facebook.github.io/react/docs/refs-and-the-dom.html
-
 * Convert URLs to titles using
   http://tools.buzzstream.com/meta-tag-extractor
   or http://embed.ly/docs/explore/extract?url=https%3A%2F%2Fdeveloper.mozilla.org%2Fen-US%2Fdocs%2FWeb%2FAPI%2FPage_Visibility_API
@@ -52,3 +49,6 @@ appcache-manifest "build/index.{html,css,js}" "build/**/*.{css,js}"
 * Experiment with https://www.npmjs.com/package/autobind-decorator
   to see if we can avoid having to type any
   `this.someMethod=this.someMethod.bind(this)`
+
+* Avoid DOM query selectors and use refs
+  https://facebook.github.io/react/docs/refs-and-the-dom.html

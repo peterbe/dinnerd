@@ -1,6 +1,10 @@
 import { action, extendObservable, ObservableMap } from 'mobx'
 // import { autorun } from 'mobx'
+import { isWithinInterval } from 'date-fns/esm'
 
+const dateFns = {
+  isWithinInterval: isWithinInterval,
+}
 
 class Day {
   constructor(date, datetime, text = '', notes = '', starred = false) {
@@ -54,8 +58,11 @@ class Store {
       get filteredDays() {
         return this.days.values().filter(day => {
           if (this.dateRangeStart) {
-            // XXX Can this be replaced with dateFns.isWithinInterval ??
-            if (day.datetime >= this.dateRangeStart && day.datetime < this.dateRangeEnd) {
+            const withinRange = dateFns.isWithinInterval(
+              day.datetime,
+              {start: this.dateRangeStart, end:this.dateRangeEnd}
+            )
+            if (withinRange) {
               return true
             } else {
             }
