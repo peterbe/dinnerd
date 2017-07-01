@@ -414,43 +414,6 @@ const ShowWeekdayHeadDate = pure(
 
 })
 
-
-// export const DisplayDay = onlyUpdateForKeys(['text', 'notes', 'starred'])(
-//   ({ text, notes, starred, fieldClicked }) => {
-//   return (
-//     <div className="display-day">
-//       {
-//         !text.trim() && !notes.trim() ?
-//         <p onClick={e => fieldClicked('text')}><i>empty</i></p>
-//         : null
-//       }
-//       <p
-//         className="text"
-//         onClick={e => fieldClicked('text')}>
-//         {
-//           text.split('\n').map((item, key) => (
-//             <span key={key}>{item}<br/></span>
-//           ))
-//         }
-//       </p>
-//       <p
-//         className="notes"
-//         onClick={e => fieldClicked('notes')}>
-//         <Linkify
-//           properties={{target: '_blank'}}>
-//           { notes }
-//         </Linkify>
-//       </p>
-//       { starred ?
-//         <p><Heart
-//           size={16}
-//           filled={starred}
-//           bubble={e => {}}
-//         /></p> : null
-//       }
-//     </div>
-//   )
-// })
 export const DisplayDay = pure(
   ({ text, notes, starred, fieldClicked }) => {
   return (
